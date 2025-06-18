@@ -73,6 +73,7 @@ foreach ($subject_suffixes as $code => $suffix) {
     $extracted_info = [
         '科目名' => null,
         '時間割コード' => $code, // ループのキーから科目コードを保存
+        '曜限'=> null,
         '単位数' => null,
         '授業の概要' => null,
         '狙い' => null,
@@ -93,6 +94,12 @@ foreach ($subject_suffixes as $code => $suffix) {
         $code_from_table_node = $xpath->query('.//th[contains(text(), "時間割コード")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
         if ($code_from_table_node) {
             // $extracted_info['時間割コード'] = trim($code_from_table_node->textContent); // こちらで上書きしても良い
+        }
+
+        // 曜限
+        $day_period_node = $xpath->query('.//th[contains(text(), "曜限")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
+        if ($day_period_node) {
+            $extracted_info['曜限'] = trim($day_period_node->textContent);
         }
 
         // 単位数: 「単位数」の<th>の隣の<td>

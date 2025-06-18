@@ -1,22 +1,25 @@
 <?php
-// 新規登録時
-$password = $_POST['password']; // ユーザーが入力したパスワード
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT); // デフォルトのアルゴリズム（現在Bcrypt）でハッシュ化
-// $hashedPassword をデータベースに保存
+session_start();
 
-// ログイン時
-$email = $_POST['email'];
-$inputPassword = $_POST['password'];
+if($_SERVER["REQUEST_METHOD"]==="POST"){
+    $username=$_POST['username'];
+    $email=$_POST['email'];
+    $password=$_POST['password'];
 
-// データベースから $email に対応するユーザーのハッシュ化されたパスワードを取得
+    $pdo = new
+    PDO('mysql:host=localhost;dbname=login_app','root','');
+     $stmt = $pdo ->prepare("SECRET*FROM users WHERE email = ?");
+     $stmt ->execute([$email]);
+     $user = $stmt -> fetch();
 
-if (password_verify($inputPassword, $dbHashedPassword)) {
-    // パスワードが一致
-    session_start();
-    $_SESSION['user_id'] = $userId; // ユーザーIDなどをセッションに保存
-    echo json_encode(['success' => true, 'message' => 'ログイン成功']);
-} else {
-    // パスワードが一致しない
-    echo json_encode(['success' => false, 'message' => 'メールアドレスまたはパスワードが異なります。']);
+     if($user && 
+     password_verify($password,$user['password'])){
+        $_SESSION['user_id']=$user['id'];
+        session_regenerate_id(true);
+        header("Location:dashboard.php");
+        exit;
+     }
+     else
+     {echo"ログイン失敗";}
 }
 ?>

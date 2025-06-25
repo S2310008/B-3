@@ -32,8 +32,8 @@ $subject = $all_subjects[$current_code] ?? null;
                 <tr><th>時間割コード</th><td><?php echo htmlspecialchars($subject['時間割コード']); ?></td></tr>
                 <tr><th>曜限</th><td><?php echo htmlspecialchars($subject['曜限']); ?></td></tr>
                 <tr><th>単位数</th><td><?php echo htmlspecialchars($subject['単位数']); ?></td></tr>
-                <tr><th>関連科目</th><td><?php echo htmlspecialchars($subject['関連科目']); ?></td></tr>
                 <tr><th class="overview">授業の概要</th><td class="overview"><?php echo htmlspecialchars($subject['授業の概要']); ?></td></tr>
+                <tr><th>関連科目</th><td><?php echo htmlspecialchars($subject['関連科目']); ?></td></tr>
             </table>
             <p style="margin-top: 20px;"><a href="index.php">← 一覧に戻る</a></p>
 

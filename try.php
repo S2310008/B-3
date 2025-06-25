@@ -18,6 +18,7 @@ const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/S1/S1_';
 $subject_suffixes = [
     'S1408230' => 'S1408230_S1_ja_JP_70.html',   // 例：HCI基礎の科目コードと対応するURLの末尾
     'S1408240' => 'S1408240_S1_ja_JP_111.html', // 例：HCI応用の科目コードと対応するURLの末尾
+    'S1408260_S1'=> 'S1408260_S1_ja_JP_4.html', // 計算機システム・OS
     // 'Sxxxxxxx' => 'Sxxxxxxx_S1_ja_JP_YYY.html', // 取得したい他の科目を追加
 ];
 

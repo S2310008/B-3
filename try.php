@@ -76,7 +76,7 @@ foreach ($subject_suffixes as $code => $suffix) {
         '曜限'=> null,
         '単位数' => null,
         '授業の概要' => null,
-        '狙い' => null,
+        //'狙い' => null,
         '関連科目' => null,
     ];
 
@@ -127,10 +127,10 @@ foreach ($subject_suffixes as $code => $suffix) {
             $aim_position = mb_strpos($full_text, '本授業の目標は', 0, 'UTF-8');
             if ($aim_position !== false) {
                 $extracted_info['授業の概要'] = trim(mb_substr($full_text, 0, $aim_position, 'UTF-8'));
-                $extracted_info['狙い'] = trim(mb_substr($full_text, $aim_position, null, 'UTF-8'));
+                //$extracted_info['狙い'] = trim(mb_substr($full_text, $aim_position, null, 'UTF-8'));
             } else {
                 $extracted_info['授業の概要'] = $full_text;
-                $extracted_info['狙い'] = null;
+                //$extracted_info['狙い'] = null;
             }
         }
 

@@ -152,7 +152,51 @@ foreach ($subject_suffixes as $code => $suffix) {
 
 curl_close($ch); // ループ終了後にcURLセッションを閉じる
 
+// ...（ループはここで終わる）...
+
+curl_close($ch); // ループ終了後にcURLセッションを閉じる
+
 echo "\n--- 全てのスクレイピングが完了しました ---\n";
+
+// --- ここからCSVファイルへの保存処理を追加 ---
+
+if (!empty($all_extracted_data)) {
+    $csv_file_path = __DIR__ . '/syllabus_data.csv';
+    
+    // ファイルを書き込みモードで開く
+    $file = fopen($csv_file_path, 'w');
+
+    if ($file) {
+        // 1. 文字化け対策（BOMをファイルの先頭に書き込む）
+        // これにより、日本語を含むCSVをExcelで開いた際の文字化けを防ぎます。
+        fputs($file, "\xEF\xBB\xBF");
+
+        // 2. ヘッダー行を書き込む
+        // データのキー（連想配列のキー）を取得してヘッダーとして使用
+        $header = array_keys($all_extracted_data[0]);
+        fputcsv($file, $header);
+
+        // 3. データ行を書き込む
+        // 全ての科目データをループで1行ずつ書き込む
+        foreach ($all_extracted_data as $subject_data) {
+            fputcsv($file, $subject_data);
+        }
+
+        // 4. ファイルを閉じる
+        fclose($file);
+
+        echo "データを " . $csv_file_path . " に保存しました。\n";
+
+    } else {
+        echo "エラー: ファイルの書き出しに失敗しました。\n";
+    }
+
+} else {
+    echo "抽出されたデータがありませんでした。ファイルは作成されません。\n";
+}
+
+// --- Firebaseへの保存（オプション） ---
+// ...
 // 抽出された全データを表示（確認用）
 print_r($all_extracted_data);
 

@@ -1,4 +1,4 @@
-// 目標単位数を定義するオブジェクト (変更なし)
+// 目標単位数を定義するオブジェクト
 const targetUnits = {
     kyoyo: 24,         // 教養教育科目
     kogakuKiso: 16,    // 工学基礎科目
@@ -68,29 +68,58 @@ function calculateUnitsWithConversion(initialAcquiredUnits) {
 
     // --- 換算後の最終的な残りの単位数と合計を計算 ---
     const finalResults = {};
-    let totalAcquired = 0;
-    const GRADUATION_TARGET_UNITS = 124; // 卒業に必要な総単位数を固定値として定義
+    let totalAcquiredForGraduation = 0; // 卒業要件の総取得単位計算用
+    let totalTargetUnitsSum = 0; // 各科目の目標単位数の合計
 
     for (const category in targetUnits) {
         if (targetUnits.hasOwnProperty(category)) {
+            // 各カテゴリの取得済み単位は、目標単位数を超えないように調整して最終結果に反映
+            // ここで算出される finalAcquiredForCategory が、そのカテゴリで「目標として認められる単位」
+            const finalAcquiredForCategory = Math.min(currentAcquired[category], targetUnits[category]);
+            
+            // 個々のカテゴリの残り単位数を計算
+            finalResults[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
+            
+            // 卒業要件上の総取得単位に加算（自由選択科目は後で特別に加算）
             if (category !== 'jiyuSentaku') {
-                const finalAcquiredForCategory = Math.min(currentAcquired[category], targetUnits[category]);
-                finalResults[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
-                totalAcquired += finalAcquiredForCategory;
+                totalAcquiredForGraduation += finalAcquiredForCategory;
             }
+            
+            // 全ての目標単位を合算
+            totalTargetUnitsSum += targetUnits[category];
         }
     }
 
-    // 自由選択科目については、最終的な取得済み単位数（換算された単位を含む）を計算し、
-    // 目標単位数を超過した分も全体の取得済み単位に含める
+    // 自由選択科目の残り単位は、目標値と実際の取得済み単位（換算含む）に基づいて計算
     finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku);
-    totalAcquired += Math.min(currentAcquired.jiyuSentaku, targetUnits.jiyuSentaku); // 自由選択の目標分を加算
-    totalAcquired += Math.max(0, currentAcquired.jiyuSentaku - targetUnits.jiyuSentaku); // 自由選択の超過分も総取得単位に加算
+    
+    // 全体の取得済み単位数（卒業要件用）には、自由選択科目の取得済み単位（換算含む）をそのまま加算
+    // ここで、自由選択科目の取得済み単位を合算する
+    totalAcquiredForGraduation += currentAcquired.jiyuSentaku;
 
     // 最終的な全体の計算
-    finalResults.totalAcquired = totalAcquired; // 換算された単位を含んだ総取得単位
-    // 全体の残り単位数 = 卒業目標単位数 (124) - 全体の取得済み単位数
-    finalResults.totalRemaining = Math.max(0, GRADUATION_TARGET_UNITS - finalResults.totalAcquired);
+    finalResults.totalAcquired = totalAcquiredForGraduation; // 全体の取得済み単位数はこれで確定
+
+    // 全体の残り単位数: これは「各カテゴリの目標単位数の合計」から
+    // 「各カテゴリの目標達成分（自由選択は超過分も含む）の合計」を引くことで算出
+    // これにより、個別の残り単位の和が正確に反映される
+    const GRADUATION_TARGET_UNITS = 124; // 卒業に必要な総単位数（この値も最終確認用として残します）
+
+    // ここで、各カテゴリの目標単位の合計 (totalTargetUnitsSum) から、
+    // 各カテゴリで「目標として認められる単位」の合計 (totalAcquiredForGraduation) を引くことで、
+    // 全体の残り単位数を算出します。
+    // ※この計算方法では、自由選択科目の超過分が全体の残り単位数に影響しないように注意が必要です。
+    //   「各科目の残り単位数の和」という定義に最も忠実にするため、
+    //   finalResultsに格納された個々の残り単位を合計し直す方が確実です。
+    
+    // 以下のように再計算することで、個々の科目の残り単位の合計とします。
+    let recalculatedTotalRemaining = 0;
+    for (const category in finalResults) {
+        if (finalResults.hasOwnProperty(category)) {
+            recalculatedTotalRemaining += finalResults[category];
+        }
+    }
+    finalResults.totalRemaining = recalculatedTotalRemaining;
 
     return finalResults;
 }

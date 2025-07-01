@@ -1,5 +1,10 @@
 <?php
 
+// Composerのオートロードファイルを読み込み（Firebaseを使う場合）
+require __DIR__.'/vendor/autoload.php';
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\ServiceAccount;
+
 // --- URLの基本設定と取得したい科目リスト ---
 
 // 和歌山大学シラバスの共通プレフィックス
@@ -19,7 +24,7 @@ $subject_suffixes = [
     'S1405850_S1' => 'S1405850_S1_ja_JP_12.html', //データ構造とアルゴリズム
     'S1407250_S1' => 'S1407250_S1_ja_JP_80.html', //デザイン企画論A
     'S1407260_S1' => 'S1407260_S1_ja_JP_118.html', //デザイン企画論B
-    '' => '',
+    
     // 'Sxxxxxxx' => 'Sxxxxxxx_S1_ja_JP_YYY.html', // 取得したい他の科目を追加
 ];
 
@@ -197,8 +202,39 @@ if (!empty($all_extracted_data)) {
 }
 
 // 抽出された全データを表示（確認用）
-print_r($all_extracted_data);
+//print_r($all_extracted_data);
 
+// --- Firebaseへの保存 ---
+// ★この部分のコメントアウトをすべて解除し、パスを設定します。
+// ★Firebase ConsoleでダウンロードしたJSONファイルの正確なパスに修正してください。
+$serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; // ★この 'xxxxxxxxxx' 部分をあなたのファイル名に合わせて正確に！
+try {
+    // Factory と Database インスタンスの作成
+    $factory = (new Factory)
+        ->withServiceAccount($serviceAccountPath)
+        ->withDatabaseUri('https://b3app-b0c29-default-rtdb.firebaseio.com'); // ★この行を追加！
+    $database = $factory->createDatabase();
+    $databasePath = 'syllabus_subjects'; // Firebase Realtime Databaseに保存するルートパス
 
+    echo "\n--- Firebaseへのデータ保存を開始します ---\n";
+
+    foreach ($all_extracted_data as $subject_data) {
+        if (!empty($subject_data['時間割コード'])) {
+            $subject_code = $subject_data['時間割コード'];
+            // 科目コードをキーとして、その科目の全データを保存
+            // 例: /syllabus_subjects/S1408230 にデータが保存されます
+            $database->getReference($databasePath . '/' . $subject_code)->set($subject_data);
+            echo "保存完了: 科目コード " . $subject_code . " - " . ($subject_data['科目名'] ?? '不明') . "\n";
+        } else {
+            echo "警告: 時間割コードがないため、この科目はFirebaseに保存できませんでした。\n";
+            // デバッグのため、時間割コードがない場合のデータ内容も表示できます
+            // print_r($subject_data);
+        }
+    }
+    echo "\n--- Firebaseへのデータ保存が完了しました ---\n";
+
+} catch (Exception $e) {
+    echo "\nFirebaseへのデータ保存中にエラーが発生しました: " . $e->getMessage() . "\n";
+}
 
 ?>

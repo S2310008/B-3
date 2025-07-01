@@ -1,0 +1,17 @@
+{
+    "name": "mahos/b-3",
+    "autoload": {
+        "psr-4": {
+            "Mahos\\B3\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "sktmaho",
+            "email": "sekita.maho@g.wakayama-u.jp"
+        }
+    ],
+    "require": {
+        "kreait/firebase-php": "^5.26"
+    }
+}

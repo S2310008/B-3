@@ -1,11 +1,5 @@
 <?php
 
-// Composerのオートロードファイルを読み込み（Firebaseを使う場合）
-// 必要なければコメントアウトしたままでOKです
-// require __DIR__.'/vendor/autoload.php';
-// use Kreait\Firebase\Factory;
-// use Kreait\Firebase\ServiceAccount;
-
 // --- URLの基本設定と取得したい科目リスト ---
 
 // 和歌山大学シラバスの共通プレフィックス
@@ -16,9 +10,16 @@ const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/S1/S1_';
 // ここに、**あなたが取得したい全ての科目について、正確な科目コードとそれに対応するURLの末尾部分**を追加してください。
 // キーが科目コード、値がその科目のURLの 'S1_' 以降の文字列全体です。
 $subject_suffixes = [
-    'S1408230' => 'S1408230_S1_ja_JP_70.html',   // 例：HCI基礎の科目コードと対応するURLの末尾
-    'S1408240' => 'S1408240_S1_ja_JP_111.html', // 例：HCI応用の科目コードと対応するURLの末尾
-    'S1408260_S1'=> 'S1408260_S1_ja_JP_4.html', // 計算機システム・OS
+    'S1408230_S1' => 'S1408230_S1_ja_JP_70.html',   // 例：HCI基礎の科目コードと対応するURLの末尾
+    'S1408240_S1' => 'S1408240_S1_ja_JP_111.html', // 例：HCI応用の科目コードと対応するURLの末尾
+    'S1408260_S1' => 'S1408260_S1_ja_JP_4.html', // 計算機システム・OS
+    'S1405860_S1' => 'S1405860_S1_ja_JP_6.html', //情報システム実験
+    'S1408480_S1' => 'S1408480_S1_ja_JP_8.html', //情報デザイン
+    'S1408390_S1' => 'S1408390_S1_ja_JP_10.html', //情報学セミナー1
+    'S1405850_S1' => 'S1405850_S1_ja_JP_12.html', //データ構造とアルゴリズム
+    'S1407250_S1' => 'S1407250_S1_ja_JP_80.html', //デザイン企画論A
+    'S1407260_S1' => 'S1407260_S1_ja_JP_118.html', //デザイン企画論B
+    '' => '',
     // 'Sxxxxxxx' => 'Sxxxxxxx_S1_ja_JP_YYY.html', // 取得したい他の科目を追加
 ];
 
@@ -77,7 +78,6 @@ foreach ($subject_suffixes as $code => $suffix) {
         '曜限'=> null,
         '単位数' => null,
         '授業の概要' => null,
-        //'狙い' => null,
         '関連科目' => null,
     ];
 
@@ -196,30 +196,9 @@ if (!empty($all_extracted_data)) {
     echo "抽出されたデータがありませんでした。ファイルは作成されません。\n";
 }
 
-// --- Firebaseへの保存（オプション） ---
-// ...
 // 抽出された全データを表示（確認用）
 print_r($all_extracted_data);
 
-// --- Firebaseへの保存（オプション） ---
-/*
-$serviceAccountPath = __DIR__ . '/path/to/your/firebase_service_account.json'; // 正しいパスに修正！
 
-try {
-    $factory = (new Factory)->withServiceAccount($serviceAccountPath);
-    $database = $factory->createDatabase();
-    $databasePath = 'syllabus_subjects'; // Firebaseのルートパス
-
-    foreach ($all_extracted_data as $subject) {
-        if (!empty($subject['時間割コード'])) {
-            $database->getReference($databasePath . '/' . $subject['時間割コード'])->set($subject);
-        }
-    }
-    echo "\nFirebaseへのデータ保存が完了しました。\n";
-
-} catch (Exception $e) {
-    echo "\nFirebaseへのデータ保存中にエラーが発生しました: " . $e->getMessage() . "\n";
-}
-*/
 
 ?>

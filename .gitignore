@@ -1,0 +1,19 @@
+# Firebaseのための
+# Composer dependencies
+/vendor/
+
+# Composer lock file (optional, but generally good practice to ignore)
+# /composer.lock  # If you want to include composer.lock in Git, comment this out
+
+# Environment variables (sensitive data, if you use .env files)
+.env
+
+# Firebase Service Account Key (VERY IMPORTANT - NEVER COMMIT THIS!)
+/keys/
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

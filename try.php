@@ -1,10 +1,9 @@
 <?php
 
 // Composerのオートロードファイルを読み込み（Firebaseを使う場合）
-// 必要なければコメントアウトしたままでOKです
-// require __DIR__.'/vendor/autoload.php';
-// use Kreait\Firebase\Factory;
-// use Kreait\Firebase\ServiceAccount;
+require __DIR__.'/vendor/autoload.php';
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\ServiceAccount;
 
 // --- URLの基本設定と取得したい科目リスト ---
 
@@ -18,6 +17,14 @@ const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/S1/S1_';
 $subject_suffixes = [
     'S1408230' => 'S1408230_S1_ja_JP_70.html',   // 例：HCI基礎の科目コードと対応するURLの末尾
     'S1408240' => 'S1408240_S1_ja_JP_111.html', // 例：HCI応用の科目コードと対応するURLの末尾
+    'S1408260' => 'S1408260_S1_ja_JP_4.html', // 計算機システム・OS
+    'S1405860' => 'S1405860_S1_ja_JP_6.html', //情報システム実験
+    'S1408480' => 'S1408480_S1_ja_JP_8.html', //情報デザイン
+    'S1408390' => 'S1408390_S1_ja_JP_10.html', //情報学セミナー1
+    'S1405850' => 'S1405850_S1_ja_JP_12.html', //データ構造とアルゴリズム
+    'S1407250' => 'S1407250_S1_ja_JP_80.html', //デザイン企画論A
+    'S1407260' => 'S1407260_S1_ja_JP_118.html', //デザイン企画論B
+    
     // 'Sxxxxxxx' => 'Sxxxxxxx_S1_ja_JP_YYY.html', // 取得したい他の科目を追加
 ];
 
@@ -76,7 +83,6 @@ foreach ($subject_suffixes as $code => $suffix) {
         '曜限'=> null,
         '単位数' => null,
         '授業の概要' => null,
-        //'狙い' => null,
         '関連科目' => null,
     ];
 
@@ -152,29 +158,83 @@ foreach ($subject_suffixes as $code => $suffix) {
 
 curl_close($ch); // ループ終了後にcURLセッションを閉じる
 
+// ...（ループはここで終わる）...
+
+curl_close($ch); // ループ終了後にcURLセッションを閉じる
+
 echo "\n--- 全てのスクレイピングが完了しました ---\n";
+
+// --- ここからCSVファイルへの保存処理を追加 ---
+
+if (!empty($all_extracted_data)) {
+    $csv_file_path = __DIR__ . '/syllabus_data.csv';
+    
+    // ファイルを書き込みモードで開く
+    $file = fopen($csv_file_path, 'w');
+
+    if ($file) {
+        // 1. 文字化け対策（BOMをファイルの先頭に書き込む）
+        // これにより、日本語を含むCSVをExcelで開いた際の文字化けを防ぎます。
+        fputs($file, "\xEF\xBB\xBF");
+
+        // 2. ヘッダー行を書き込む
+        // データのキー（連想配列のキー）を取得してヘッダーとして使用
+        $header = array_keys($all_extracted_data[0]);
+        fputcsv($file, $header);
+
+        // 3. データ行を書き込む
+        // 全ての科目データをループで1行ずつ書き込む
+        foreach ($all_extracted_data as $subject_data) {
+            fputcsv($file, $subject_data);
+        }
+
+        // 4. ファイルを閉じる
+        fclose($file);
+
+        echo "データを " . $csv_file_path . " に保存しました。\n";
+
+    } else {
+        echo "エラー: ファイルの書き出しに失敗しました。\n";
+    }
+
+} else {
+    echo "抽出されたデータがありませんでした。ファイルは作成されません。\n";
+}
+
 // 抽出された全データを表示（確認用）
-print_r($all_extracted_data);
+//print_r($all_extracted_data);
 
-// --- Firebaseへの保存（オプション） ---
-/*
-$serviceAccountPath = __DIR__ . '/path/to/your/firebase_service_account.json'; // 正しいパスに修正！
-
+// --- Firebaseへの保存 ---
+// ★この部分のコメントアウトをすべて解除し、パスを設定します。
+// ★Firebase ConsoleでダウンロードしたJSONファイルの正確なパスに修正してください。
+$serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; // ★この 'xxxxxxxxxx' 部分をあなたのファイル名に合わせて正確に！
 try {
-    $factory = (new Factory)->withServiceAccount($serviceAccountPath);
+    // Factory と Database インスタンスの作成
+    $factory = (new Factory)
+        ->withServiceAccount($serviceAccountPath)
+        ->withDatabaseUri('https://b3app-b0c29-default-rtdb.firebaseio.com'); // ★この行を追加！
     $database = $factory->createDatabase();
-    $databasePath = 'syllabus_subjects'; // Firebaseのルートパス
+    $databasePath = 'syllabus_subjects'; // Firebase Realtime Databaseに保存するルートパス
 
-    foreach ($all_extracted_data as $subject) {
-        if (!empty($subject['時間割コード'])) {
-            $database->getReference($databasePath . '/' . $subject['時間割コード'])->set($subject);
+    echo "\n--- Firebaseへのデータ保存を開始します ---\n";
+
+    foreach ($all_extracted_data as $subject_data) {
+        if (!empty($subject_data['時間割コード'])) {
+            $subject_code = $subject_data['時間割コード'];
+            // 科目コードをキーとして、その科目の全データを保存
+            // 例: /syllabus_subjects/S1408230 にデータが保存されます
+            $database->getReference($databasePath . '/' . $subject_code)->set($subject_data);
+            echo "保存完了: 科目コード " . $subject_code . " - " . ($subject_data['科目名'] ?? '不明') . "\n";
+        } else {
+            echo "警告: 時間割コードがないため、この科目はFirebaseに保存できませんでした。\n";
+            // デバッグのため、時間割コードがない場合のデータ内容も表示できます
+            // print_r($subject_data);
         }
     }
-    echo "\nFirebaseへのデータ保存が完了しました。\n";
+    echo "\n--- Firebaseへのデータ保存が完了しました ---\n";
 
 } catch (Exception $e) {
     echo "\nFirebaseへのデータ保存中にエラーが発生しました: " . $e->getMessage() . "\n";
 }
-*/
 
 ?>

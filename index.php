@@ -1,4 +1,4 @@
-<?php require_once 'read_csv.php'; // CSV読み込み部品をインポート ?>
+<!-- <?php require_once 'read_csv.php'; // CSV読み込み部品をインポート ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -22,4 +22,4 @@
         ?>
     </ul>
 </body>
-</html>
+</html> -->

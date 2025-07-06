@@ -1,4 +1,4 @@
-<?php require_once 'read_csv.php'; // CSV読み込み部品をインポート ?>
+<!-- <?php require_once 'read_csv.php'; // CSV読み込み部品をインポート ?>
 <?php
 // URLから科目コードを取得 (?code=S1408230 の部分)
 $current_code = $_GET['code'] ?? '';
@@ -44,4 +44,4 @@ $subject = $all_subjects[$current_code] ?? null;
         <?php endif; ?>
     </div>
 </body>
-</html>
+</html> -->

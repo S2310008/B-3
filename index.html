@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>和歌山大学 カリキュラム一覧</title>
+    <style>
+        /* CSSスタイルは変更なしで、そのまま残します */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .curriculum-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .subject-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
+        }
+        .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        .subject-card a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: block;
+            width: 100%;
+            height: 100%;
+            line-height: 1.4;
+        }
+        .subject-card a:hover {
+            color: #0056b3;
+        }
+        .subject-code {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .loading-message, .error-message {
+            text-align: center;
+            padding: 30px;
+            font-size: 1.1em;
+            color: #6c757d;
+        }
+        .error-message {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>和歌山大学 カリキュラム一覧</h1>
+
+    <div class="loading-message" id="loading">科目情報を読み込み中...</div>
+    <div class="error-message" id="error" style="display: none;"></div>
+    <div id="curriculum-container" class="curriculum-grid">
+        </div>
+
+    <script type="module">
+        // ★変更点1: Firebaseのコア機能とRealtime Databaseの機能をインポートします
+        // 'https://www.gstatic.com/firebasejs/11.10.0/...' のバージョンはあなたのFirebase Consoleで見たものと合わせてください
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js"; // onValueはリアルタイム更新用、getは一回取得用
+
+        // ★変更点2: Firebase Consoleからコピーした正確な firebaseConfig オブジェクトをここに貼り付けます
+        // YOUR_API_KEY などはあなたの実際の値に置き換えてください
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU",
+            authDomain: "b3app-b0c29.firebaseapp.com",
+            databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com",
+            projectId: "b3app-b0c29",
+            storageBucket: "b3app-b0c29.firebasestorage.app",
+            messagingSenderId: "1000910332829",
+            appId: "1:1000910332829:web:a1bc233e638afed9b90574"
+        };
+
+        // ★変更点3: Firebaseアプリとデータベースのインスタンスを初期化します
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app); // Realtime Databaseのインスタンスを取得
+
+        // これ以降のJavaScriptコードは、これらの新しいFirebase関数を使います
+
+        const curriculumContainer = document.getElementById('curriculum-container');
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+
+        // 科目データを表示する関数 (フィルター機能なし)
+        // この関数自体は以前と同じでOKです。
+        function displaySubjects(subjects) {
+            curriculumContainer.innerHTML = ''; // コンテナをクリア
+
+            if (Object.keys(subjects).length === 0) {
+                curriculumContainer.innerHTML = '<p class="error-message">表示する科目情報がありません。</p>';
+                return;
+            }
+
+            for (const subjectCode in subjects) {
+                const subject = subjects[subjectCode];
+                const subjectCard = document.createElement('div');
+                subjectCard.className = 'subject-card';
+
+                // 詳細ページへのリンク
+                // ★detail.htmlへのリンクはそのまま
+                subjectCard.innerHTML = `
+                    <a href="detail.html?code=${encodeURIComponent(subjectCode)}">
+                        ${subject['科目名'] ?? '不明な科目'}
+                        <div class="subject-code">${subjectCode}</div>
+                    </a>
+                `;
+                curriculumContainer.appendChild(subjectCard);
+            }
+        }
+
+        // ★変更点4: Firebaseから科目データを取得する関数をモジュラーSDK形式に修正します
+        async function fetchSubjects() {
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+
+            try {
+                // ★修正: database.ref('syllabus_subjects').once('value') の代わりに
+                // get(ref(database, 'syllabus_subjects')) を使います
+                const snapshot = await get(ref(database, 'syllabus_subjects')); // get() は一回だけデータを取得
+
+                const subjectsData = snapshot.val() || {}; // データがない場合は空オブジェクト
+
+                loadingElement.style.display = 'none';
+                displaySubjects(subjectsData); // 取得した全データを表示
+
+            } catch (error) {
+                console.error("Firebaseからのデータ取得エラー:", error);
+                loadingElement.style.display = 'none';
+                errorElement.style.display = 'block';
+                errorElement.textContent = `科目情報の読み込みに失敗しました: ${error.message}`;
+            }
+        }
+
+        // ページ読み込み時に科目データを取得
+        fetchSubjects();
+    </script>
+</body>
+</html>

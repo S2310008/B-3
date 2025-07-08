@@ -44,7 +44,7 @@ if (($handle = fopen($subjectListCsvPath, "r")) !== FALSE) {
 }
 
 // --- curriculum_meta.csv からメタデータ（メジャー分類など）を読み込む ---
-$metaCsvPath = __DIR__ . '/curriculum_meta.csv'; // メタ情報CSVファイルへのパス
+$metaCsvPath = __DIR__ . '/curriculum_list.csv'; // メタ情報CSVファイルへのパス
 
 $all_meta_data = [];
 
@@ -110,7 +110,9 @@ foreach ($subject_suffixes as $code => $suffix) {
     $isCoreMajorSubjectForDetailedExtraction = (
         str_contains($majorClassification, 'IS') ||
         str_contains($majorClassification, 'XD') ||
-        str_contains($majorClassification, 'NC')
+        str_contains($majorClassification, 'NC') ||
+        str_contains($majorClassification, 'IS_XD') ||
+        str_contains($majorClassification, 'IS_NC_XD')
     );
 
     $full_url = BASE_SYLLABUS_URL_PREFIX . $suffix;

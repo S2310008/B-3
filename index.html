@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>和歌山大学 カリキュラム一覧</title>
     <style>
-        /* CSSスタイルは変更なしで、そのまま残します */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
@@ -83,14 +82,10 @@
         </div>
 
     <script type="module">
-        // ★変更点1: Firebaseのコア機能とRealtime Databaseの機能をインポートします
-        // 'https://www.gstatic.com/firebasejs/11.10.0/...' のバージョンはあなたのFirebase Consoleで見たものと合わせてください
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
         import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js"; // onValueはリアルタイム更新用、getは一回取得用
 
-        // ★変更点2: Firebase Consoleからコピーした正確な firebaseConfig オブジェクトをここに貼り付けます
-        // YOUR_API_KEY などはあなたの実際の値に置き換えてください
-        const firebaseConfig = {
+         const firebaseConfig = {
             apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU",
             authDomain: "b3app-b0c29.firebaseapp.com",
             databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com",
@@ -100,18 +95,15 @@
             appId: "1:1000910332829:web:a1bc233e638afed9b90574"
         };
 
-        // ★変更点3: Firebaseアプリとデータベースのインスタンスを初期化します
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app); // Realtime Databaseのインスタンスを取得
-
-        // これ以降のJavaScriptコードは、これらの新しいFirebase関数を使います
+        const database = getDatabase(app);
 
         const curriculumContainer = document.getElementById('curriculum-container');
         const loadingElement = document.getElementById('loading');
         const errorElement = document.getElementById('error');
 
         // 科目データを表示する関数 (フィルター機能なし)
-        // この関数自体は以前と同じでOKです。
+
         function displaySubjects(subjects) {
             curriculumContainer.innerHTML = ''; // コンテナをクリア
 
@@ -137,14 +129,12 @@
             }
         }
 
-        // ★変更点4: Firebaseから科目データを取得する関数をモジュラーSDK形式に修正します
         async function fetchSubjects() {
             loadingElement.style.display = 'block';
             errorElement.style.display = 'none';
 
             try {
-                // ★修正: database.ref('syllabus_subjects').once('value') の代わりに
-                // get(ref(database, 'syllabus_subjects')) を使います
+                
                 const snapshot = await get(ref(database, 'syllabus_subjects')); // get() は一回だけデータを取得
 
                 const subjectsData = snapshot.val() || {}; // データがない場合は空オブジェクト

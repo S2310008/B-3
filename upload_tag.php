@@ -14,7 +14,7 @@ $serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d230
 $databaseUrl = 'https://b3app-b0c29-default-rtdb.firebaseio.com/'; // ★あなたのデータベースURLに置き換える！
 
 // メタ情報CSVファイルへのパス (先ほど作成したCSVファイル)
-$metaCsvPath = __DIR__ . '/curriculum.csv';
+$metaCsvPath = __DIR__ . '/curriculum_list.csv';
 
 // Firebaseに保存するパス (新しいパスを設定)
 $firebaseMetaPath = 'curriculum_meta';

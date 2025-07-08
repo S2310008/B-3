@@ -1,33 +1,28 @@
 <?php
 
-// Composerのオートロードファイルを読み込み（Firebaseを使うため必須）
-// Firebase SDKをインストール済みであることを確認してください
 require __DIR__.'/vendor/autoload.php';
 use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount; // ★この行も必要です！
+use Kreait\Firebase\ServiceAccount;
 
-// --- URLの基本設定 ---
-// 和歌山大学シラバスの共通プレフィックス
+// --- シラバスURLの基本設定 ---
 const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/S1/S1_';
 
 // --- スクレイピング対象科目リストをCSVから読み込む ---
-$subjectListCsvPath = __DIR__ . '/subject_list_for_scraping.csv'; // 科目リストCSVファイルのパス
+$subjectListCsvPath = __DIR__ . '/subject_list.csv'; // 科目リストCSVファイルのパス
 
-$subject_suffixes = []; // 科目リストを格納する配列を初期化
+$subject_suffixes = [];
 
 if (!file_exists($subjectListCsvPath)) {
     die("エラー: 科目リストCSVファイル '{$subjectListCsvPath}' が見つかりません。\n");
 }
 
 if (($handle = fopen($subjectListCsvPath, "r")) !== FALSE) {
-    // BOM (Byte Order Mark) を処理しながらヘッダー行を読み込む
     $headers = fgetcsv($handle);
     if (isset($headers[0]) && str_starts_with($headers[0], "\xEF\xBB\xBF")) {
         $headers[0] = substr($headers[0], 3);
     }
-    $headers = array_map('trim', $headers); // ヘッダーの空白をトリム
+    $headers = array_map('trim', $headers);
 
-    // ヘッダーに '科目コード' と 'URLサフィックス' が含まれていることを確認
     $colCodeIndex = array_search('科目コード', $headers);
     $colSuffixIndex = array_search('URLサフィックス', $headers);
 
@@ -36,11 +31,9 @@ if (($handle = fopen($subjectListCsvPath, "r")) !== FALSE) {
     }
 
     while (($row = fgetcsv($handle)) !== FALSE) {
-        // 行が空でないことを確認し、十分な要素があるかチェック
         if (empty($row[$colCodeIndex]) || empty($row[$colSuffixIndex])) {
-             // 空行や不正な行を警告してスキップ。exit; はしない。
-             echo "警告: CSVの空の行または不正な形式の行をスキップします: " . implode(',', $row) . "\n";
-             continue;
+            echo "警告: CSVの空の行または不正な形式の行をスキップします: " . implode(',', $row) . "\n";
+            continue;
         }
         $subject_suffixes[$row[$colCodeIndex]] = $row[$colSuffixIndex];
     }
@@ -50,80 +43,119 @@ if (($handle = fopen($subjectListCsvPath, "r")) !== FALSE) {
     die("エラー: 科目リストCSVファイル '{$subjectListCsvPath}' を開けませんでした。\n");
 }
 
+// --- curriculum_meta.csv からメタデータ（メジャー分類など）を読み込む ---
+$metaCsvPath = __DIR__ . '/curriculum_meta.csv'; // メタ情報CSVファイルへのパス
+
+$all_meta_data = [];
+
+if (!file_exists($metaCsvPath)) {
+    echo "警告: メタ情報CSVファイル '{$metaCsvPath}' が見つかりません。一部情報が不足する可能性があります。\n";
+} else {
+    if (($metaHandle = fopen($metaCsvPath, "r")) !== FALSE) {
+        $metaHeaders = fgetcsv($metaHandle);
+        if (isset($metaHeaders[0]) && str_starts_with($metaHeaders[0], "\xEF\xBB\xBF")) {
+            $metaHeaders[0] = substr($metaHeaders[0], 3);
+        }
+        $metaHeaders = array_map('trim', $metaHeaders);
+
+        $metaColCodeIndex = array_search('科目コード', $metaHeaders);
+        $metaMajorColIndex = array_search('メジャー', $metaHeaders); 
+
+        if ($metaColCodeIndex === false || $metaMajorColIndex === false) {
+            echo "エラー: メタ情報CSVのヘッダーに '科目コード' または 'メジャー' が見つかりません。メタデータを読み込めません。\n";
+        } else {
+            while (($metaRow = fgetcsv($metaHandle)) !== FALSE) {
+                $metaRow = array_map('trim', $metaRow);
+                if (count($metaHeaders) !== count($metaRow)) {
+                    error_log("警告: メタ情報CSVの行の要素数がヘッダーと一致しません。行をスキップします: " . implode(',', $metaRow));
+                    continue;
+                }
+                if (isset($metaRow[$metaColCodeIndex]) && !empty($metaRow[$metaColCodeIndex])) {
+                    $item = array_combine($metaHeaders, $metaRow);
+                    $all_meta_data[$metaRow[$metaColCodeIndex]] = $item;
+                } else {
+                    error_log("警告: メタ情報CSVで '科目コード' がないか空であるため、この行はスキップされます: " . implode(',', $metaRow));
+                }
+            }
+        }
+        fclose($metaHandle);
+        echo "メタ情報CSVファイルから " . count($all_meta_data) . " 件のメタデータを読み込みました。\n";
+    } else {
+        echo "警告: メタ情報CSVファイル '{$metaCsvPath}' を開けませんでした。\n";
+    }
+}
 
 $all_extracted_data = []; // 抽出した全ての科目データを格納する配列
 
-// --- cURLセッションの初期化（ループの外で一度だけ行います） ---
+// --- cURLセッションの初期化 ---
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // ページ内容を文字列として取得
-// !!! 注意: SSL証明書エラー回避のための設定（本番環境では推奨されません） !!!
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 注意: 本番環境では適切に設定すること
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-// ---
 
 echo "--- シラバススクレイピング開始 ---\n";
 
-// --- ここから foreach ループを開始する ---
-// $subject_suffixesの「キー」が$codeに、「値」が$suffixにそれぞれ格納されます。
+// --- 各科目URLをループし、情報をスクレイピング ---
 foreach ($subject_suffixes as $code => $suffix) {
-    // 完全なシラバスURLを生成
+    if (empty($code) || empty($suffix)) {
+        echo "警告: 空の科目定義をスキップします。\n";
+        continue;
+    }
+
+    // 科目コードに対応するメタデータを取得し、詳細抽出を判断
+    $currentSubjectMeta = $all_meta_data[$code] ?? [];
+    $majorClassification = $currentSubjectMeta['メジャー'] ?? '';
+
+    // IS, XD, NC、およびそれらの共有メジャーの科目かどうかを判断
+    $isCoreMajorSubjectForDetailedExtraction = (
+        str_contains($majorClassification, 'IS') ||
+        str_contains($majorClassification, 'XD') ||
+        str_contains($majorClassification, 'NC')
+    );
+
     $full_url = BASE_SYLLABUS_URL_PREFIX . $suffix;
+    echo "アクセス中: " . $full_url . "\n";
 
-    echo "アクセス中: " . $full_url . "\n"; // アクセス中のURLを表示
-
-    curl_setopt($ch, CURLOPT_URL, $full_url); // ループ内でURLをセット
+    curl_setopt($ch, CURLOPT_URL, $full_url);
     $html_content = curl_exec($ch);
 
     if ($html_content === false) {
         echo "エラー: cURLエラー - " . curl_error($ch) . " (URL: " . $full_url . ")\n";
-        // ★致命的なエラーでなければ次の科目に進むため continue; に変更
         continue; 
     }
 
-    // HTMLコンテンツが取得できたか確認（例: 404ページでないか）
     if (strpos($html_content, '指定されたページは見つかりませんでした') !== false || strpos($html_content, 'Not Found') !== false) {
         echo "警告: ページが見つかりません (404エラーの可能性): " . $full_url . "\n";
-        // ★次の科目に進むため continue; に変更
         continue;
     }
 
-    // DOMDocumentでHTMLを解析
     $dom = new DOMDocument();
-    @$dom->loadHTML($html_content); // @でHTMLエラーを抑制
+    @$dom->loadHTML($html_content);
     $xpath = new DOMXPath($dom);
 
+    // 抽出情報を格納する配列を初期化
     $extracted_info = [
         '科目名' => null,
-        '時間割コード' => $code, // ループのキーから科目コードを保存
+        '時間割コード' => $code,
         '曜限'=> null,
         '単位数' => null,
         '授業の概要' => null,
         '関連科目' => null,
-        '開講区分' => null, // ★追加: 開講区分
+        '開講区分' => null,
     ];
+    // メタデータも抽出情報に結合して含める
+    $extracted_info = array_merge($extracted_info, $currentSubjectMeta);
 
-    // --- 1つ目のタブ (id="tabs-1") から情報を抽出 ---
+    // --- 1つ目のタブ (id="tabs-1") から基本情報を抽出 ---
     $tab1_content_node = $xpath->query('//div[@id="tabs-1"]')->item(0);
 
     if ($tab1_content_node) {
-        // 科目名: 「開講科目名」の<th>の隣の<td>
         $subject_name_node = $xpath->query('.//th[contains(text(), "開講科目名")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
-        if ($subject_name_node) {
-            $extracted_info['科目名'] = trim($subject_name_node->textContent);
-        }
-        // 時間割コード（テーブルからも取得可能だが、既に$codeで持っている）
-        $code_from_table_node = $xpath->query('.//th[contains(text(), "時間割コード")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
-        if ($code_from_table_node) {
-            // $extracted_info['時間割コード'] = trim($code_from_table_node->textContent); // こちらで上書きしても良い
-        }
+        if ($subject_name_node) { $extracted_info['科目名'] = trim($subject_name_node->textContent); }
 
-        // 曜限
-        $day_period_node = $xpath->query('.//th[contains(text(), "曜限")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
-        if ($day_period_node) {
-            $extracted_info['曜限'] = trim($day_period_node->textContent);
-        }
+        $day_period_node = $xpath->query('.//th[contains(., "曜限")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
+        if ($day_period_node) { $extracted_info['曜限'] = trim($day_period_node->textContent); }
 
-        // 単位数: 「単位数」の<th>の隣の<td>
         $credit_node = $xpath->query('.//th[contains(text(), "単位数")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
         if ($credit_node) {
             $credit_text = trim($credit_node->textContent);
@@ -131,72 +163,53 @@ foreach ($subject_suffixes as $code => $suffix) {
             $extracted_info['単位数'] = isset($matches[1]) ? (float)$matches[1] : null;
         }
         
-        // ★追加：開講区分もここで抽出
-        $offering_division_node = $xpath->query('.//th[contains(text(), "開講区分")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
-        if ($offering_division_node) {
-            $extracted_info['開講区分'] = trim($offering_division_node->textContent);
-        }
+        $offering_division_node = $xpath->query('.//th[contains(., "開講区分")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
+        if ($offering_division_node) { $extracted_info['開講区分'] = trim($offering_division_node->textContent); }
 
     } else {
         echo "警告: タブ1（基本情報）のコンテンツが見つかりませんでした。(URL: " . $full_url . ")\n";
     }
 
-    // --- 2つ目のタブ (id="tabs-2") から情報を抽出 ---
+    // --- 2つ目のタブ (id="tabs-2") から詳細情報を抽出 ---
     $tab2_content_node = $xpath->query('//div[@id="tabs-2"]')->item(0);
 
-    if ($tab2_content_node) {
-        // 授業の概要と狙い: 「授業の概要・ねらい」の<th>の隣の<td>
+    // $isCoreMajorSubjectForDetailedExtraction が true の場合のみ、概要と関連科目を抽出
+    if ($tab2_content_node && $isCoreMajorSubjectForDetailedExtraction) { 
         $overview_aim_node = $xpath->query('.//th[contains(text(), "授業の概要・ねらい")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
         if ($overview_aim_node) {
             $full_text = trim(strip_tags($overview_aim_node->textContent));
-
-            // 日本語対応のためmb_strposを使用。`php.ini`で`mbstring`を有効にする必要があります。
-            // 「狙い」は抽出しない方針なので、この分割ロジックは削除またはコメントアウト
-            // $aim_position = mb_strpos($full_text, '本授業の目標は', 0, 'UTF-8');
-            // if ($aim_position !== false) {
-            //     $extracted_info['授業の概要'] = trim(mb_substr($full_text, 0, $aim_position, 'UTF-8'));
-            // } else {
-                 $extracted_info['授業の概要'] = $full_text; // 「狙い」を抽出しないなら、全文を概要にする
-            // }
+            $extracted_info['授業の概要'] = $full_text; 
         }
 
-        // 関連科目: 「履修を推奨する関連科目」の<th>の隣の<td>
         $related_subjects_node = $xpath->query('.//th[contains(text(), "履修を推奨する関連科目")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
         if ($related_subjects_node) {
             $extracted_info['関連科目'] = trim(strip_tags($related_subjects_node->textContent));
         }
+    } else if ($tab2_content_node && !$isCoreMajorSubjectForDetailedExtraction) {
+        echo "情報: タブ2のコンテンツは情報学領域外の科目のため詳細抽出をスキップしました。(URL: " . $full_url . ")\n";
     } else {
         echo "警告: タブ2（授業の概要・ねらいなど）のコンテンツが見つかりませんでした。(URL: " . $full_url . ")\n";
     }
 
     // --- 抽出したデータを全体の配列に追加 ---
     $all_extracted_data[] = $extracted_info;
-    echo "  -> 抽出完了: " . ($extracted_info['科目名'] ?? '不明な科目') . " (コード: " . $extracted_info['時間割コード'] . ")\n"; // 抽出した時間割コードを表示
+    echo "  -> 抽出完了: " . ($extracted_info['科目名'] ?? '不明な科目') . " (コード: " . ($extracted_info['時間割コード'] ?? '不明') . ")\n";
+    sleep(1);
+} // --- foreach ループの終了 ---
 
-    sleep(1); // サーバーに負荷をかけないよう1秒待機
-} // --- foreach ループはここで終わる！ ---
-
-// ★不要な二重の curl_close($ch); を削除します
 curl_close($ch);
 
 echo "\n--- 全てのスクレイピングが完了しました ---\n";
 
-// ★CSV保存のロジックは削除またはコメントアウトします。
-// if (!empty($all_extracted_data)) { ... }
-
-
 // --- Firebaseへの保存 ---
-// ★この部分のコメントアウトをすべて解除し、パスを設定します。
-// ★Firebase ConsoleでダウンロードしたJSONファイルの正確なパスに修正してください。
 $serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; 
 
 try {
-    // Factory と Database インスタンスの作成
     $factory = (new Factory)
         ->withServiceAccount($serviceAccountPath)
         ->withDatabaseUri('https://b3app-b0c29-default-rtdb.firebaseio.com'); 
     $database = $factory->createDatabase();
-    $databasePath = 'syllabus_subjects'; // Firebase Realtime Databaseに保存するルートパス
+    $databasePath = 'syllabus_subjects'; 
 
     echo "\n--- Firebaseへのデータ保存を開始します ---\n";
 
@@ -214,8 +227,5 @@ try {
 } catch (Exception $e) {
     echo "\nFirebaseへのデータ保存中にエラーが発生しました: " . $e->getMessage() . "\n";
 }
-
-// 抽出された全データを表示（確認用）
-//print_r($all_extracted_data);
 
 ?>

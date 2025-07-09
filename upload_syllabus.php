@@ -43,7 +43,7 @@ if (($handle = fopen($subjectListCsvPath, "r")) !== FALSE) {
     die("エラー: 科目リストCSVファイル '{$subjectListCsvPath}' を開けませんでした。\n");
 }
 
-// --- curriculum_meta.csv からメタデータ（メジャー分類など）を読み込む ---
+// --- curriculum_list.csv からメタデータ（メジャー分類など）を読み込む ---
 $metaCsvPath = __DIR__ . '/curriculum_list.csv'; // メタ情報CSVファイルへのパス
 
 $all_meta_data = [];
@@ -59,7 +59,7 @@ if (!file_exists($metaCsvPath)) {
         $metaHeaders = array_map('trim', $metaHeaders);
 
         $metaColCodeIndex = array_search('科目コード', $metaHeaders);
-        $metaMajorColIndex = array_search('メジャー', $metaHeaders); 
+        $metaMajorColIndex = array_search('tag1', $metaHeaders); 
 
         if ($metaColCodeIndex === false || $metaMajorColIndex === false) {
             echo "エラー: メタ情報CSVのヘッダーに '科目コード' または 'メジャー' が見つかりません。メタデータを読み込めません。\n";
@@ -102,17 +102,18 @@ foreach ($subject_suffixes as $code => $suffix) {
         continue;
     }
 
-    // 科目コードに対応するメタデータを取得し、詳細抽出を判断
+    // 科目コードに対応するメタデータを取得
     $currentSubjectMeta = $all_meta_data[$code] ?? [];
-    $majorClassification = $currentSubjectMeta['メジャー'] ?? '';
+    $majorClassification = $currentSubjectMeta['tag1'] ?? ''; // CSVの「メジャー」列から取得
 
-    // IS, XD, NC、およびそれらの共有メジャーの科目かどうかを判断
-    $isCoreMajorSubjectForDetailedExtraction = (
-        str_contains($majorClassification, 'IS') ||
-        str_contains($majorClassification, 'XD') ||
-        str_contains($majorClassification, 'NC') ||
-        str_contains($majorClassification, 'IS_XD') ||
-        str_contains($majorClassification, 'IS_NC_XD')
+    // ★変更1: IS, XD, NCの科目かどうかを判断（詳細情報を抽出するかどうか）
+    $isInfoScienceMajor = (
+        $majorClassification === 'IS' ||
+        $majorClassification === 'XD' ||
+        $majorClassification === 'NC'
+        // CSVの「メジャー」列に 'IS_XD', 'IS_NC_XD' のような複合メジャーがある場合、
+        // str_contains を使うか、CSVのメジャー列を 'IS', 'XD', 'NC' の単一に絞るかで調整。
+        // 今回のCSVでは IS,XD,NC が単独で使われているのでこれでOK。
     );
 
     $full_url = BASE_SYLLABUS_URL_PREFIX . $suffix;
@@ -126,7 +127,7 @@ foreach ($subject_suffixes as $code => $suffix) {
         continue; 
     }
 
-    if (strpos($html_content, '指定されたページは見つかりませんでした') !== false || strpos($html_content, 'Not Found') !== false) {
+    if (strpos($html_content, '指定されたページが見つかりませんでした') !== false || strpos($html_content, 'Not Found') !== false) {
         echo "警告: ページが見つかりません (404エラーの可能性): " . $full_url . "\n";
         continue;
     }
@@ -135,21 +136,23 @@ foreach ($subject_suffixes as $code => $suffix) {
     @$dom->loadHTML($html_content);
     $xpath = new DOMXPath($dom);
 
-    // 抽出情報を格納する配列を初期化
+    // ★変更2: 抽出情報を格納する配列を初期化
+    // 授業の概要と関連科目は、条件によってnullのままか、値が入る
+    // 教員名は最初からnullで初期化し、常に抽出を試みる
     $extracted_info = [
         '科目名' => null,
         '時間割コード' => $code,
         '曜限'=> null,
         '単位数' => null,
-        '授業の概要' => null,
-        '関連科目' => null,
         '開講区分' => null,
-        '教員名' => null,
+        '教員名' => null, // 教員名は全科目で抽出
+        '授業の概要' => null, // 情報学領域のみ抽出
+        '関連科目' => null,   // 情報学領域のみ抽出
     ];
     // メタデータも抽出情報に結合して含める
     $extracted_info = array_merge($extracted_info, $currentSubjectMeta);
 
-    // --- 1つ目のタブ (id="tabs-1") から基本情報を抽出 ---
+    // --- 1つ目のタブ (id="tabs-1") から基本情報を抽出（変更なし） ---
     $tab1_content_node = $xpath->query('//div[@id="tabs-1"]')->item(0);
 
     if ($tab1_content_node) {
@@ -169,6 +172,7 @@ foreach ($subject_suffixes as $code => $suffix) {
         $offering_division_node = $xpath->query('.//th[contains(., "開講区分")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
         if ($offering_division_node) { $extracted_info['開講区分'] = trim($offering_division_node->textContent); }
 
+        // ★変更3: 教員名の抽出ロジックはここに置き、常に実行される
         $instructor_name_node = $xpath->query('.//th[contains(., "教員名")]/following-sibling::td[@class="syllabus-top-info syllabus-break-word"]', $tab1_content_node)->item(0);
         if ($instructor_name_node) {
             $extracted_info['教員名'] = trim($instructor_name_node->textContent);
@@ -178,11 +182,11 @@ foreach ($subject_suffixes as $code => $suffix) {
         echo "警告: タブ1（基本情報）のコンテンツが見つかりませんでした。(URL: " . $full_url . ")\n";
     }
 
-    // --- 2つ目のタブ (id="tabs-2") から詳細情報を抽出 ---
+    // --- 2つ目のタブ (id="tabs-2") から詳細情報を抽出（条件付き） ---
     $tab2_content_node = $xpath->query('//div[@id="tabs-2"]')->item(0);
 
-    // $isCoreMajorSubjectForDetailedExtraction が true の場合のみ、概要と関連科目を抽出
-    if ($tab2_content_node && $isCoreMajorSubjectForDetailedExtraction) { 
+    // ★変更4: IS, XD, NCメジャーの科目のみ、概要と関連科目を抽出
+    if ($tab2_content_node && $isInfoScienceMajor) { 
         $overview_aim_node = $xpath->query('.//th[contains(text(), "授業の概要・ねらい")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
         if ($overview_aim_node) {
             $full_text = trim(strip_tags($overview_aim_node->textContent));
@@ -193,13 +197,15 @@ foreach ($subject_suffixes as $code => $suffix) {
         if ($related_subjects_node) {
             $extracted_info['関連科目'] = trim(strip_tags($related_subjects_node->textContent));
         }
-    } else if ($tab2_content_node && !$isCoreMajorSubjectForDetailedExtraction) {
-        echo "情報: タブ2のコンテンツは情報学領域外の科目のため詳細抽出をスキップしました。(URL: " . $full_url . ")\n";
+    } else if ($tab2_content_node && !$isInfoScienceMajor) {
+        // 情報学領域外の科目の場合、詳細抽出はスキップし、ログ出力
+        echo "情報: タブ2のコンテンツは情報学領域外（IS/XD/NC以外）の科目のため詳細抽出をスキップしました。(URL: " . $full_url . ")\n";
+        // extracted_info['授業の概要'] と extracted_info['関連科目'] はnullのまま
     } else {
         echo "警告: タブ2（授業の概要・ねらいなど）のコンテンツが見つかりませんでした。(URL: " . $full_url . ")\n";
     }
 
-    // --- 抽出したデータを全体の配列に追加 ---
+    // --- 抽出したデータを全体の配列に追加は変更なし ---
     $all_extracted_data[] = $extracted_info;
     echo "  -> 抽出完了: " . ($extracted_info['科目名'] ?? '不明な科目') . " (コード: " . ($extracted_info['時間割コード'] ?? '不明') . ")\n";
     sleep(1);
@@ -209,7 +215,7 @@ curl_close($ch);
 
 echo "\n--- 全てのスクレイピングが完了しました ---\n";
 
-// --- Firebaseへの保存 ---
+// --- Firebaseへの保存は変更なし ---
 $serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; 
 
 try {

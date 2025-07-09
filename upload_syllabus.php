@@ -5,7 +5,7 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 
 // --- シラバスURLの基本設定 ---
-const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/S1/S1_';
+const BASE_SYLLABUS_URL_PREFIX = 'https://web.wakayama-u.ac.jp/syllabus/';
 
 // --- スクレイピング対象科目リストをCSVから読み込む ---
 $subjectListCsvPath = __DIR__ . '/subject_list.csv'; // 科目リストCSVファイルのパス
@@ -144,6 +144,7 @@ foreach ($subject_suffixes as $code => $suffix) {
         '授業の概要' => null,
         '関連科目' => null,
         '開講区分' => null,
+        '教員名' => null,
     ];
     // メタデータも抽出情報に結合して含める
     $extracted_info = array_merge($extracted_info, $currentSubjectMeta);
@@ -167,6 +168,11 @@ foreach ($subject_suffixes as $code => $suffix) {
         
         $offering_division_node = $xpath->query('.//th[contains(., "開講区分")]/following-sibling::td[@class="syllabus-break-word"]', $tab1_content_node)->item(0);
         if ($offering_division_node) { $extracted_info['開講区分'] = trim($offering_division_node->textContent); }
+
+        $instructor_name_node = $xpath->query('.//th[contains(., "教員名")]/following-sibling::td[@class="syllabus-top-info syllabus-break-word"]', $tab1_content_node)->item(0);
+        if ($instructor_name_node) {
+            $extracted_info['教員名'] = trim($instructor_name_node->textContent);
+        }
 
     } else {
         echo "警告: タブ1（基本情報）のコンテンツが見つかりませんでした。(URL: " . $full_url . ")\n";

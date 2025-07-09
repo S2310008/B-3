@@ -11,7 +11,7 @@ use Kreait\Firebase\ServiceAccount;
 $serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; // ★あなたのJSONファイル名に置き換える！
 
 // Realtime DatabaseのURL (try.phpと同じURL)
-$databaseUrl = 'https://b3app-b0c29-default-rtdb.firebaseio.com/'; // ★あなたのデータベースURLに置き換える！
+$databaseUrl = 'https://b3app-b0c29-default-rtdb.firebaseio.com/';
 
 // メタ情報CSVファイルへのパス (先ほど作成したCSVファイル)
 $metaCsvPath = __DIR__ . '/curriculum_list.csv';

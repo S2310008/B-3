@@ -3,98 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>単位計算アプリ</title>
+    <title>単位計算</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        div { margin-bottom: 10px; }
-        label { display: inline-block; width: 150px; }
-        input[type="number"] { width: 60px; }
-        .result-item { font-weight: bold; }
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #0056b3; }
+        p { margin-bottom: 15px; }
+        .input-section div { margin-bottom: 10px; display: flex; align-items: center; }
+        .input-section label { flex: 0 0 180px; margin-right: 10px; font-weight: bold; color: #555; }
+        .input-section input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; max-width: 80px; }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover { background-color: #0056b3; }
+        .results-section div { margin-bottom: 8px; }
+        .result-item { font-weight: bold; color: #0056b3; display: inline-block; width: 220px; }
+        .total-summary { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
+        .total-summary .result-item { color: #d9534f; } /* 残り単位を強調 */
+        .total-summary #resultTotalAcquired { color: #28a745; } /* 取得済みを強調 */
+        .chart-container { /* ★追加★ */
+            width: 100%;
+            max-width: 700px; /* グラフの最大幅 */
+            margin: 30px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 400px; /* ★グラフ全体のコンテナの高さを指定★ */
+        }
+        .navigation { margin-top: 30px; text-align: center; }
+        .navigation a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 0 10px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .navigation a:hover {
+            background-color: #5a6268;
+        }
     </style>
 </head>
 <body>
-    <h1>単位計算</h1>
+    <div class="container">
+        <h1>単位計算</h1>
 
-    <p>各科目の取得済み単位数を入力してください。</p>
+        <p>各科目の取得済み単位数を入力して、卒業までの残り単位を計算しましょう。</p>
 
-    <div>
-        <label for="kyoyoUnits">教養教育科目:</label>
-        <input type="number" id="kyoyoUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="kogakuKisoUnits">工学基礎科目:</label>
-        <input type="number" id="kogakuKisoUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="johoKisoUnits">情報基礎科目:</label>
-        <input type="number" id="johoKisoUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="johoOyoUnits">情報応用科目:</label>
-        <input type="number" id="johoOyoUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="major1Units">第1メジャー科目:</label>
-        <input type="number" id="major1Units" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="major2Units">第2メジャー科目:</label>
-        <input type="number" id="major2Units" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="otherMajorUnits">その他メジャー科目:</label>
-        <input type="number" id="otherMajorUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="sotsukenUnits">卒業研究:</label>
-        <input type="number" id="sotsukenUnits" value="0" min="0"> 単位
-    </div>
-    <div>
-        <label for="jiyuSentakuUnits">自由選択科目:</label>
-        <input type="number" id="jiyuSentakuUnits" value="0" min="0"> 単位
-    </div>
+        <div class="input-section">
+            <div>
+                <label for="kyoyoUnits">教養教育科目:</label>
+                <input type="number" id="kyoyoUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="kogakuKisoUnits">工学基礎科目:</label>
+                <input type="number" id="kogakuKisoUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="johoKisoUnits">情報基礎科目:</label>
+                <input type="number" id="johoKisoUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="johoOyoUnits">情報応用科目:</label>
+                <input type="number" id="johoOyoUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="major1Units">第1メジャー科目:</label>
+                <input type="number" id="major1Units" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="major2Units">第2メジャー科目:</label>
+                <input type="number" id="major2Units" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="otherMajorUnits">その他メジャー科目:</label>
+                <input type="number" id="otherMajorUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="sotsukenUnits">卒業研究:</label>
+                <input type="number" id="sotsukenUnits" value="0" min="0"> 単位
+            </div>
+            <div>
+                <label for="jiyuSentakuUnits">自由選択科目:</label>
+                <input type="number" id="jiyuSentakuUnits" value="0" min="0"> 単位
+            </div>
+        </div>
 
-    <button onclick="updateCalculations()">計算する</button>
+        <button onclick="updateCalculations()">計算する</button>
 
-    <h2>計算結果</h2>
-    <div>
-        <span class="result-item">教養教育科目 残り:</span> <span id="resultKyoyo">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">工学基礎科目 残り:</span> <span id="resultKogakuKiso">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">情報基礎科目 残り:</span> <span id="resultJohoKiso">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">情報応用科目 残り:</span> <span id="resultJohoOyo">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">第1メジャー科目 残り:</span> <span id="resultMajor1">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">第2メジャー科目 残り:</span> <span id="resultMajor2">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">その他メジャー科目 残り:</span> <span id="resultOtherMajor">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">卒業研究 残り:</span> <span id="resultSotsuken">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">自由選択科目 残り:</span> <span id="resultJiyuSentaku">0</span> 単位
-    </div>
+        <div class="results-section">
+            <h2>計算結果</h2>
+            <div>
+                <span class="result-item">教養教育科目 残り:</span> <span id="resultKyoyo">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">工学基礎科目 残り:</span> <span id="resultKogakuKiso">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">情報基礎科目 残り:</span> <span id="resultJohoKiso">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">情報応用科目 残り:</span> <span id="resultJohoOyo">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">第1メジャー科目 残り:</span> <span id="resultMajor1">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">第2メジャー科目 残り:</span> <span id="resultMajor2">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">その他メジャー科目 残り:</span> <span id="resultOtherMajor">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">卒業研究 残り:</span> <span id="resultSotsuken">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">自由選択科目 残り:</span> <span id="resultJiyuSentaku">0</span> 単位
+            </div>
+        </div>
 
-    <h3>全体の単位状況</h3>
-    <div>
-        <span class="result-item">全体の取得済み単位数:</span> <span id="resultTotalAcquired">0</span> 単位
-    </div>
-    <div>
-        <span class="result-item">全体の残りの単位数:</span> <span id="resultTotalRemaining">0</span> 単位
+        <div class="total-summary">
+            <h3>全体の単位状況</h3>
+            <div>
+                <span class="result-item">全体の取得済み単位数:</span> <span id="resultTotalAcquired">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">全体の残りの単位数:</span> <span id="resultTotalRemaining">0</span> 単位
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>各科目の達成状況グラフ</h2>
+            <canvas id="tanikeisanChart"></canvas>
+        </div>
+
+        <div class="navigation">
+            <a href="tanisimulation.html">単位取得計画シミュレーションへ</a>
+        </div>
     </div>
 
     <script>
-        // 目標単位数を定義するオブジェクト
         const targetUnits = {
             kyoyo: 24,         // 教養教育科目
             kogakuKiso: 16,    // 工学基礎科目
@@ -107,100 +167,85 @@
             jiyuSentaku: 8     // 自由選択科目
         };
 
-        /**
-         * 各科目の残りの単位数を計算し、超過単位を換算する関数。
-         * @param {object} initialAcquiredUnits - 初期に取得済みの各科目の単位数を格納したオブジェクト
-         * @returns {object} - 各科目の最終的な残りの単位数と、全体の単位状況を格納したオブジェクト
-         */
+        let tanikeisanChart; // ★グラフのインスタンスを保持する変数★
+
         function calculateUnitsWithConversion(initialAcquiredUnits) {
-            // 処理中に単位数が変動するため、作業用のコピーを作成
             const currentAcquired = { ...initialAcquiredUnits };
 
-            // --- 換算ロジックの適用（順序が重要） ---
-
-            // 1. 第1メジャー、第2メジャー科目の超過分をその他メジャー科目に換算
             const major1Overflow = Math.max(0, currentAcquired.major1 - targetUnits.major1);
             if (major1Overflow > 0) {
                 currentAcquired.otherMajor += major1Overflow;
-                // console.log(`第1メジャー科目の超過 ${major1Overflow} をその他メジャー科目に換算`);
-                currentAcquired.major1 = targetUnits.major1; // 超過分を換算したら、元科目の取得単位は目標値に丸める
+                currentAcquired.major1 = targetUnits.major1;
             }
 
             const major2Overflow = Math.max(0, currentAcquired.major2 - targetUnits.major2);
             if (major2Overflow > 0) {
                 currentAcquired.otherMajor += major2Overflow;
-                // console.log(`第2メジャー科目の超過 ${major2Overflow} をその他メジャー科目に換算`);
-                currentAcquired.major2 = targetUnits.major2; // 超過分を換算したら、元科目の取得単位は目標値に丸める
+                currentAcquired.major2 = targetUnits.major2;
             }
 
-            // 2. 教養教育科目、工学基礎科目、情報基礎科目、情報応用科目、その他メジャー科目の超過分を自由選択科目に換算
-            // 上記のメジャー科目からの換算によって otherMajor が増えている可能性があるので、
-            // ここで otherMajor の超過分を正確に計算する
             const kyoyoOverflow = Math.max(0, currentAcquired.kyoyo - targetUnits.kyoyo);
             if (kyoyoOverflow > 0) {
                 currentAcquired.jiyuSentaku += kyoyoOverflow;
-                // console.log(`教養教育科目の超過 ${kyoyoOverflow} を自由選択科目に換算`);
                 currentAcquired.kyoyo = targetUnits.kyoyo;
             }
 
             const kogakuKisoOverflow = Math.max(0, currentAcquired.kogakuKiso - targetUnits.kogakuKiso);
             if (kogakuKisoOverflow > 0) {
                 currentAcquired.jiyuSentaku += kogakuKisoOverflow;
-                // console.log(`工学基礎科目の超過 ${kogakuKisoOverflow} を自由選択科目に換算`);
                 currentAcquired.kogakuKiso = targetUnits.kogakuKiso;
             }
 
             const johoKisoOverflow = Math.max(0, currentAcquired.johoKiso - targetUnits.johoKiso);
             if (johoKisoOverflow > 0) {
                 currentAcquired.jiyuSentaku += johoKisoOverflow;
-                // console.log(`情報基礎科目の超過 ${johoKisoOverflow} を自由選択科目に換算`);
                 currentAcquired.johoKiso = targetUnits.johoKiso;
             }
 
             const johoOyoOverflow = Math.max(0, currentAcquired.johoOyo - targetUnits.johoOyo);
             if (johoOyoOverflow > 0) {
                 currentAcquired.jiyuSentaku += johoOyoOverflow;
-                // console.log(`情報応用科目の超過 ${johoOyoOverflow} を自由選択科目に換算`);
                 currentAcquired.johoOyo = targetUnits.johoOyo;
             }
 
             const otherMajorOverflow = Math.max(0, currentAcquired.otherMajor - targetUnits.otherMajor);
             if (otherMajorOverflow > 0) {
                 currentAcquired.jiyuSentaku += otherMajorOverflow;
-                // console.log(`その他メジャー科目の超過 ${otherMajorOverflow} を自由選択科目に換算`);
                 currentAcquired.otherMajor = targetUnits.otherMajor;
             }
 
-            // 卒業研究は超過しない想定のため、換算は行わない
-            // 自由選択科目も換算元にならないため、ここでは処理しない
-
-            // --- 換算後の最終的な残りの単位数と合計を計算 ---
             const finalResults = {};
-            let totalAcquired = 0;
-            let totalTarget = 0;
+            let totalAcquiredForGraduation = 0;
+            let totalRemainingSum = 0;
 
             for (const category in targetUnits) {
                 if (targetUnits.hasOwnProperty(category)) {
-                    // 各カテゴリの取得済み単位は、目標単位数を超えないように調整して最終結果に反映
-                    // ただし、自由選択科目は特別で、超過分も全体の取得済み単位に加算されるため後で処理
                     if (category !== 'jiyuSentaku') {
                         const finalAcquiredForCategory = Math.min(currentAcquired[category], targetUnits[category]);
                         finalResults[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
-                        totalAcquired += finalAcquiredForCategory;
+                        totalAcquiredForGraduation += finalAcquiredForCategory;
                     }
-                    totalTarget += targetUnits[category];
                 }
             }
 
-            // 自由選択科目については、最終的な取得済み単位数（換算された単位を含む）を計算し、
-            // 目標単位数を超過した分も全体の取得済み単位に含める
             finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku);
-            totalAcquired += Math.min(currentAcquired.jiyuSentaku, targetUnits.jiyuSentaku); // 自由選択の目標分を加算
-            totalAcquired += Math.max(0, currentAcquired.jiyuSentaku - targetUnits.jiyuSentaku); // 自由選択の超過分も総取得単位に加算
+            totalAcquiredForGraduation += currentAcquired.jiyuSentaku;
 
-            // 最終的な全体の計算
-            finalResults.totalRemaining = Math.max(0, totalTarget - totalAcquired);
-            finalResults.totalAcquired = totalAcquired; // 換算された単位を含んだ総取得単位
+            finalResults.totalAcquired = totalAcquiredForGraduation;
+
+            let recalculatedTotalRemaining = 0;
+            for (const category in finalResults) {
+                if (finalResults.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining') {
+                    recalculatedTotalRemaining += finalResults[category];
+                }
+            }
+            finalResults.totalRemaining = recalculatedTotalRemaining;
+
+            // ★グラフ描画のために、各カテゴリの取得済み単位を返却する★
+            finalResults.acquiredCategoryUnits = {};
+            for (const category in targetUnits) {
+                finalResults.acquiredCategoryUnits[category] = currentAcquired[category];
+            }
 
             return finalResults;
         }
@@ -218,7 +263,9 @@
                 jiyuSentaku: parseInt(document.getElementById('jiyuSentakuUnits').value) || 0
             };
 
-            // ここを修正！ calculateUnitsWithConversion を呼び出す
+            localStorage.setItem('tanikeisanAcquiredUnits', JSON.stringify(acquiredUnits));
+            console.log('単位データをローカルストレージに保存しました:', acquiredUnits);
+
             const results = calculateUnitsWithConversion(acquiredUnits);
 
             document.getElementById('resultKyoyo').textContent = results.kyoyo;
@@ -233,10 +280,168 @@
 
             document.getElementById('resultTotalAcquired').textContent = results.totalAcquired;
             document.getElementById('resultTotalRemaining').textContent = results.totalRemaining;
+
+            // ★グラフを更新する関数を呼び出す★
+            updateTanikeisanChart(results.acquiredCategoryUnits);
         }
 
-        // ページロード時に一度計算を実行して初期表示を更新
-        window.onload = updateCalculations;
+        // ★グラフ描画・更新関数を新規追加★
+        function updateTanikeisanChart(acquiredDataRaw) {
+            const ctx = document.getElementById('tanikeisanChart').getContext('2d');
+            const labels = Object.keys(targetUnits).map(key => {
+                switch(key) {
+                    case 'kyoyo': return '教養教育科目';
+                    case 'kogakuKiso': return '工学基礎科目';
+                    case 'johoKiso': return '情報基礎科目';
+                    case 'johoOyo': return '情報応用科目';
+                    case 'major1': return '第1メジャー科目';
+                    case 'major2': return '第2メジャー科目';
+                    case 'otherMajor': return 'その他メジャー科目';
+                    case 'sotsuken': return '卒業研究';
+                    case 'jiyuSentaku': return '自由選択科目';
+                    default: return key;
+                }
+            });
+            
+            // グラフ表示用の取得済み単位（目標値を超えないようにキャップ）
+            const acquiredDataForChart = labels.map(label => {
+                const categoryKey = Object.keys(targetUnits).find(key => {
+                    switch(key) {
+                        case 'kyoyo': return label === '教養教育科目';
+                        case 'kogakuKiso': return label === '工学基礎科目';
+                        case 'johoKiso': return label === '情報基礎科目';
+                        case 'johoOyo': return label === '情報応用科目';
+                        case 'major1': return label === '第1メジャー科目';
+                        case 'major2': return label === '第2メジャー科目';
+                        case 'otherMajor': return label === 'その他メジャー科目';
+                        case 'sotsuken': return label === '卒業研究';
+                        case 'jiyuSentaku': return label === '自由選択科目';
+                        default: return false;
+                    }
+                });
+                // 各カテゴリの取得単位が目標単位を超えている場合、目標単位に合わせる
+                return Math.min(acquiredDataRaw[categoryKey], targetUnits[categoryKey]);
+            });
+
+            const targetData = labels.map(label => {
+                const categoryKey = Object.keys(targetUnits).find(key => {
+                    switch(key) {
+                        case 'kyoyo': return label === '教養教育科目';
+                        case 'kogakuKiso': return label === '工学基礎科目';
+                        case 'johoKiso': return label === '情報基礎科目';
+                        case 'johoOyo': return label === '情報応用科目';
+                        case 'major1': return label === '第1メジャー科目';
+                        case 'major2': return label === '第2メジャー科目';
+                        case 'otherMajor': return label === 'その他メジャー科目';
+                        case 'sotsuken': return label === '卒業研究';
+                        case 'jiyuSentaku': return label === '自由選択科目';
+                        default: return false;
+                    }
+                });
+                return targetUnits[categoryKey];
+            });
+
+            if (tanikeisanChart) {
+                tanikeisanChart.destroy();
+            }
+
+            tanikeisanChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '目標単位数',
+                        data: targetData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '現在の取得済み単位数', // ★ラベル名を変更★
+                        data: acquiredDataForChart, // ★グラフ表示用のデータを使用★
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 横向きの棒グラフ
+                    responsive: true,
+                    maintainAspectRatio: false, // CSSで高さを指定するため
+                    scales: {
+                        x: { // 横軸が単位数
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '単位数'
+                            },
+                            ticks: {
+                                stepSize: 1 // 1単位メモリ
+                            },
+                            max: Math.max(...targetData) + 2 // 目標単位の最大値より少し多めに設定
+                        },
+                        y: { // 縦軸が科目名
+                            stacked: false // 棒を重ねない
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.parsed.x;
+                                    const categoryKey = Object.keys(targetUnits).find(key => {
+                                        switch(key) {
+                                            case 'kyoyo': return context.label === '教養教育科目';
+                                            case 'kogakuKiso': return context.label === '工学基礎科目';
+                                            case 'johoKiso': return context.label === '情報基礎科目';
+                                            case 'johoOyo': return context.label === '情報応用科目';
+                                            case 'major1': return context.label === '第1メジャー科目';
+                                            case 'major2': return context.label === '第2メジャー科目';
+                                            case 'otherMajor': return context.label === 'その他メジャー科目';
+                                            case 'sotsuken': return context.label === '卒業研究';
+                                            case 'jiyuSentaku': return context.label === '自由選択科目';
+                                            default: return false;
+                                        }
+                                    });
+                                    const target = targetUnits[categoryKey];
+                                    
+                                    if (context.dataset.label === '目標単位数') {
+                                        return label + value + '単位';
+                                    } else {
+                                        const remaining = Math.max(0, target - value);
+                                        return label + value + '単位 (残り: ' + remaining + '単位)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        window.onload = function() {
+            // ページロード時にローカルストレージからデータを読み込む
+            const savedUnits = localStorage.getItem('tanikeisanAcquiredUnits');
+            if (savedUnits) {
+                const acquiredUnits = JSON.parse(savedUnits);
+                console.log('ローカルストレージから単位データを読み込みました:', acquiredUnits);
+                // 読み込んだデータを入力フィールドに反映
+                document.getElementById('kyoyoUnits').value = acquiredUnits.kyoyo || 0;
+                document.getElementById('kogakuKisoUnits').value = acquiredUnits.kogakuKiso || 0;
+                document.getElementById('johoKisoUnits').value = acquiredUnits.johoKiso || 0;
+                document.getElementById('johoOyoUnits').value = acquiredUnits.johoOyo || 0;
+                document.getElementById('major1Units').value = acquiredUnits.major1 || 0;
+                document.getElementById('major2Units').value = acquiredUnits.major2 || 0;
+                document.getElementById('otherMajorUnits').value = acquiredUnits.otherMajor || 0;
+                document.getElementById('sotsukenUnits').value = acquiredUnits.sotsuken || 0;
+                document.getElementById('jiyuSentakuUnits').value = acquiredUnits.jiyuSentaku || 0;
+            }
+            updateCalculations(); // 計算とグラフ更新を同時に実行
+        };
     </script>
 </body>
 </html>

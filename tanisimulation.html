@@ -41,7 +41,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: 400px; 
+            height: 400px;
         }
         .navigation { margin-top: 30px; text-align: center; }
         .navigation a {
@@ -63,9 +63,9 @@
     <div class="container">
         <h1>単位取得計画シミュレーション</h1>
 
-        <p>**これから取得する予定の単位**を入力して、卒業要件の達成状況をシミュレーションできます。</p>
+        <p>現在までの取得単位と、**これから取得する予定の単位**を入力して、卒業要件の達成状況をシミュレーションできます。</p>
 
-        <h2>現在の取得単位数</h2>
+        <h2>現在の取得単位数（前ページから自動読み込み）</h2>
         <div class="display-section current-units-display">
             <div>
                 <label>教養教育科目（現在）:</label>
@@ -84,11 +84,11 @@
                 <span id="displayInitialJohoOyoUnits" class="display-unit-value">0</span> 単位
             </div>
             <div>
-                <label>第1メジャー科目（現在）:</label>
+                <label><span id="displayInitialMajor1Label">第1メジャー科目</span>（現在）:</label>
                 <span id="displayInitialMajor1Units" class="display-unit-value">0</span> 単位
             </div>
             <div>
-                <label>第2メジャー科目（現在）:</label>
+                <label><span id="displayInitialMajor2Label">第2メジャー科目</span>（現在）:</label>
                 <span id="displayInitialMajor2Units" class="display-unit-value">0</span> 単位
             </div>
             <div>
@@ -124,11 +124,11 @@
                 <input type="number" id="planJohoOyoUnits" value="0" min="0"> 単位
             </div>
             <div>
-                <label for="planMajor1Units">第1メジャー科目（予定）:</label>
+                <label for="planMajor1Units"><span id="planMajor1Label">第1メジャー科目</span>（予定）:</label>
                 <input type="number" id="planMajor1Units" value="0" min="0"> 単位
             </div>
             <div>
-                <label for="planMajor2Units">第2メジャー科目（予定）:</label>
+                <label for="planMajor2Units"><span id="planMajor2Label">第2メジャー科目</span>（予定）:</label>
                 <input type="number" id="planMajor2Units" value="0" min="0"> 単位
             </div>
             <div>
@@ -148,33 +148,33 @@
         <button onclick="updateSimulation()">シミュレーションする</button>
 
         <div class="results-section">
-            <h2>シミュレーション結果</h2>
+            <h2>シミュレーション結果（最終的な単位状況）</h2>
             <div>
-                <span class="result-item">教養教育科目 :</span> <span id="finalKyoyo">0</span> / <span id="targetKyoyo">24</span> 単位
+                <span class="result-item">教養教育科目 最終:</span> <span id="finalKyoyo">0</span> / <span id="targetKyoyo">24</span> 単位
             </div>
             <div>
-                <span class="result-item">工学基礎科目 :</span> <span id="finalKogakuKiso">0</span> / <span id="targetKogakuKiso">16</span> 単位
+                <span class="result-item">工学基礎科目 最終:</span> <span id="finalKogakuKiso">0</span> / <span id="targetKogakuKiso">16</span> 単位
             </div>
             <div>
-                <span class="result-item">情報基礎科目 :</span> <span id="finalJohoKiso">0</span> / <span id="targetJohoKiso">12</span> 単位
+                <span class="result-item">情報基礎科目 最終:</span> <span id="finalJohoKiso">0</span> / <span id="targetJohoKiso">12</span> 単位
             </div>
             <div>
-                <span class="result-item">情報応用科目 :</span> <span id="finalJohoOyo">0</span> / <span id="targetJohoOyo">4</span> 単位
+                <span class="result-item">情報応用科目 最終:</span> <span id="finalJohoOyo">0</span> / <span id="targetJohoOyo">4</span> 単位
             </div>
             <div>
-                <span class="result-item">第1メジャー科目 :</span> <span id="finalMajor1">0</span> / <span id="targetMajor1">28</span> 単位
+                <span class="result-item"><span id="finalMajor1Label">第1メジャー科目</span> 最終:</span> <span id="finalMajor1">0</span> / <span id="targetMajor1">28</span> 単位
             </div>
             <div>
-                <span class="result-item">第2メジャー科目 :</span> <span id="finalMajor2">0</span> / <span id="targetMajor2">14</span> 単位
+                <span class="result-item"><span id="finalMajor2Label">第2メジャー科目</span> 最終:</span> <span id="finalMajor2">0</span> / <span id="targetMajor2">14</span> 単位
             </div>
             <div>
-                <span class="result-item">その他メジャー科目 :</span> <span id="finalOtherMajor">0</span> / <span id="targetOtherMajor">10</span> 単位
+                <span class="result-item">その他メジャー科目 最終:</span> <span id="finalOtherMajor">0</span> / <span id="targetOtherMajor">10</span> 単位
             </div>
             <div>
-                <span class="result-item">卒業研究 :</span> <span id="finalSotsuken">0</span> / <span id="targetSotsuken">8</span> 単位
+                <span class="result-item">卒業研究 最終:</span> <span id="finalSotsuken">0</span> / <span id="targetSotsuken">8</span> 単位
             </div>
             <div>
-                <span class="result-item">自由選択科目 :</span> <span id="finalJiyuSentaku">0</span> / <span id="targetJiyuSentaku">8</span> 単位
+                <span class="result-item">自由選択科目 最終:</span> <span id="finalJiyuSentaku">0</span> / <span id="targetJiyuSentaku">8</span> 単位
             </div>
         </div>
 
@@ -202,21 +202,27 @@
     </div>
 
     <script>
-        const targetUnits = {
+        let targetUnits = {
             kyoyo: 24,         // 教養教育科目
             kogakuKiso: 16,    // 工学基礎科目
             johoKiso: 12,      // 情報基礎科目
             johoOyo: 4,        // 情報応用科目
-            major1: 28,        // 第1メジャー科目
-            major2: 14,        // 第2メジャー科目
+            major1: 28,        // 第1メジャー科目 (デフォルト値。tanikeisan.htmlから上書きされる)
+            major2: 14,        // 第2メジャー科目 (デフォルト値。tanikeisan.htmlから上書きされる)
             otherMajor: 10,    // その他メジャー科目
             sotsuken: 8,       // 卒業研究
             jiyuSentaku: 8     // 自由選択科目
         };
 
-    
+        const majorTargetUnits = {
+            IS: { major1: 28, major2: 14 },
+            NC: { major1: 26, major2: 12 },
+            XD: { major1: 30, major2: 16 }
+        };
+
         let tanisimulationChart; 
         let initialAcquiredUnitsFromStorage = {}; 
+        let selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // メジャー選択の初期値
 
         function calculateUnitsForSimulation(initialAcquiredUnits, plannedUnits) {
             const combinedAcquired = {};
@@ -311,6 +317,27 @@
             return finalResults;
         }
 
+        function updateDisplayMajorLabelsAndTargets() {
+            const savedData = localStorage.getItem('tanikeisanData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' };
+            } else {
+                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // Default if no data
+            }
+
+            targetUnits.major1 = majorTargetUnits[selectedMajorsFromStorage.major1].major1;
+            targetUnits.major2 = majorTargetUnits[selectedMajorsFromStorage.major2].major2;
+
+            document.getElementById('displayInitialMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
+            document.getElementById('displayInitialMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
+            document.getElementById('planMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
+            document.getElementById('planMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
+            document.getElementById('finalMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
+            document.getElementById('finalMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
+        }
+
+
         function updateSimulation() {
             const initialUnits = initialAcquiredUnitsFromStorage; 
 
@@ -352,10 +379,8 @@
             document.getElementById('totalSimulatedAcquired').textContent = results.totalAcquired;
             document.getElementById('totalSimulatedRemaining').textContent = results.totalRemaining;
 
-
             updateSimulatedChart(results.finalCategoryAcquired);
         }
-
 
         function updateSimulatedChart(data) {
             const ctx = document.getElementById('unitStatusChart').getContext('2d');
@@ -365,8 +390,8 @@
                     case 'kogakuKiso': return '工学基礎科目';
                     case 'johoKiso': return '情報基礎科目';
                     case 'johoOyo': return '情報応用科目';
-                    case 'major1': return '第1メジャー科目';
-                    case 'major2': return '第2メジャー科目';
+                    case 'major1': return `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
+                    case 'major2': return `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
                     case 'otherMajor': return 'その他メジャー科目';
                     case 'sotsuken': return '卒業研究';
                     case 'jiyuSentaku': return '自由選択科目';
@@ -374,47 +399,17 @@
                 }
             });
             
-            const acquiredData = labels.map(label => {
-                const categoryKey = Object.keys(targetUnits).find(key => {
-                    switch(key) {
-                        case 'kyoyo': return label === '教養教育科目';
-                        case 'kogakuKiso': return label === '工学基礎科目';
-                        case 'johoKiso': return label === '情報基礎科目';
-                        case 'johoOyo': return label === '情報応用科目';
-                        case 'major1': return label === '第1メジャー科目';
-                        case 'major2': return label === '第2メジャー科目';
-                        case 'otherMajor': return label === 'その他メジャー科目';
-                        case 'sotsuken': return label === '卒業研究';
-                        case 'jiyuSentaku': return label === '自由選択科目';
-                        default: return false;
-                    }
-                });
-                return data[categoryKey];
+            const acquiredData = Object.keys(targetUnits).map(key => {
+                return data[key];
             });
 
-            const targetData = labels.map(label => {
-                const categoryKey = Object.keys(targetUnits).find(key => {
-                    switch(key) {
-                        case 'kyoyo': return label === '教養教育科目';
-                        case 'kogakuKiso': return label === '工学基礎科目';
-                        case 'johoKiso': return label === '情報基礎科目';
-                        case 'johoOyo': return label === '情報応用科目';
-                        case 'major1': return label === '第1メジャー科目';
-                        case 'major2': return label === '第2メジャー科目';
-                        case 'otherMajor': return label === 'その他メジャー科目';
-                        case 'sotsuken': return label === '卒業研究';
-                        case 'jiyuSentaku': return label === '自由選択科目';
-                        default: return false;
-                    }
-                });
-                return targetUnits[categoryKey];
+            const targetData = Object.keys(targetUnits).map(key => {
+                return targetUnits[key];
             });
 
-    
             if (tanisimulationChart) {
                 tanisimulationChart.destroy();
             }
-
 
             tanisimulationChart = new Chart(ctx, {
                 type: 'bar',
@@ -448,7 +443,7 @@
                             ticks: {
                                 stepSize: 1
                             },
-                            max: Math.max(...targetData) + 2
+                            max: Math.max(...targetData) + 2 // Ensure max value is sufficient
                         },
                         y: {
                             stacked: false
@@ -463,20 +458,7 @@
                                         label += ': ';
                                     }
                                     const value = context.parsed.x;
-                                    const categoryKey = Object.keys(targetUnits).find(key => {
-                                        switch(key) {
-                                            case 'kyoyo': return context.label === '教養教育科目';
-                                            case 'kogakuKiso': return context.label === '工学基礎科目';
-                                            case 'johoKiso': return context.label === '情報基礎科目';
-                                            case 'johoOyo': return context.label === '情報応用科目';
-                                            case 'major1': return context.label === '第1メジャー科目';
-                                            case 'major2': return context.label === '第2メジャー科目';
-                                            case 'otherMajor': return context.label === 'その他メジャー科目';
-                                            case 'sotsuken': return context.label === '卒業研究';
-                                            case 'jiyuSentaku': return context.label === '自由選択科目';
-                                            default: return false;
-                                        }
-                                    });
+                                    const categoryKey = Object.keys(targetUnits)[context.dataIndex];
                                     const target = targetUnits[categoryKey];
                                     
                                     if (context.dataset.label === '目標単位数') {
@@ -494,10 +476,14 @@
         }
 
         window.onload = function() {
-            const savedUnits = localStorage.getItem('tanikeisanAcquiredUnits');
-            if (savedUnits) {
-                initialAcquiredUnitsFromStorage = JSON.parse(savedUnits);
-                console.log('シミュレーションページでローカルストレージから単位データを読み込みました:', initialAcquiredUnitsFromStorage);
+            // ローカルストレージから単位データとメジャー選択を読み込む
+            const savedData = localStorage.getItem('tanikeisanData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                initialAcquiredUnitsFromStorage = parsedData.acquiredUnits;
+                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' }; // フォールバック
+
+                console.log('シミュレーションページでローカルストレージから単位データとメジャー選択を読み込みました:', parsedData);
                 
                 document.getElementById('displayInitialKyoyoUnits').textContent = initialAcquiredUnitsFromStorage.kyoyo || 0;
                 document.getElementById('displayInitialKogakuKisoUnits').textContent = initialAcquiredUnitsFromStorage.kogakuKiso || 0;
@@ -511,9 +497,13 @@
             } else {
                 console.warn('ローカルストレージに単位データが見つかりませんでした。tanikeisan.html で単位を入力してください。');
                 alert('単位データが見つかりません。まず「単位計算」ページで現在の取得単位を入力してください。');
+                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // データがない場合でもデフォルト設定
             }
-
-
+            
+            // 読み込んだメジャー選択に基づいて表示ラベルと目標単位を更新
+            updateDisplayMajorLabelsAndTargets();
+            
+            // シミュレーション結果の更新とグラフ描画を実行
             updateSimulation(); 
         };
     </script>

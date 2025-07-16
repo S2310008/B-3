@@ -4,16 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>単位取得計画シミュレーション</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="firebase-config.js"></script>
     <style>
+        /* (スタイルは変更なしなので省略) */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0056b3; }
         p { margin-bottom: 15px; }
         .input-section div, .display-section div { margin-bottom: 10px; display: flex; align-items: center; }
         .input-section label, .display-section label { flex: 0 0 220px; margin-right: 10px; font-weight: bold; color: #555; }
         .input-section input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; max-width: 80px; }
-        .display-unit-value { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-width: 80px; background-color: #f9f9f9; color: #666; text-align: right;} /* 読み取り専用表示用 */
+        .display-unit-value { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-width: 80px; background-color: #f9f9f9; color: #666; text-align: right;}
 
         button {
             padding: 10px 20px;
@@ -56,6 +60,52 @@
         }
         .navigation a:hover {
             background-color: #5a6268;
+        }
+
+        .subject-list-container {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .subject-item {
+            display: grid;
+            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
+            gap: 10px;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .subject-item:last-child {
+            border-bottom: none;
+        }
+        .subject-item label {
+            margin: 0;
+            font-weight: normal;
+            flex: none;
+        }
+        .subject-item input[type="checkbox"] {
+            margin: 0;
+        }
+        .subject-header {
+            font-weight: bold;
+            background-color: #e2e2e2;
+            padding: 8px 0;
+            border-bottom: 2px solid #ccc;
+            display: grid;
+            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
+            gap: 10px;
+        }
+        .subject-header div {
+            text-align: center;
+        }
+        .subject-header div:nth-child(6) { text-align: left; }
+        .subject-header div:nth-child(7) { text-align: center; }
+        .subject-item .units {
+            text-align: center;
         }
     </style>
 </head>
@@ -105,6 +155,25 @@
             </div>
         </div>
 
+        <hr>
+        <h2>これから取得する予定の科目一覧</h2>
+        <p>これから取得する科目にチェックを入れて、予定単位を自動で加算できます。</p>
+        <div class="subject-list-container">
+            <div class="subject-header">
+                <div></div>
+                <div>Tag1</div>
+                <div>Tag2</div>
+                <div>Tag3</div>
+                <div>Tag4</div>
+                <div>科目名</div>
+                <div>単位</div>
+            </div>
+            <div id="subjectListSimulation">
+                </div>
+        </div>
+        <button onclick="applyPlannedSubjects()">チェックした科目を予定に加算</button>
+
+        <hr>
         <h2>これから取得する予定の単位数</h2>
         <div class="input-section plan-units">
             <div>
@@ -202,27 +271,37 @@
     </div>
 
     <script>
+        const tagToCategoryMap = {
+            // IS, NC, XD は動的に処理するためここでは定義しない
+            "その他": "otherMajor",
+            "連携": "jiyuSentaku",
+            "教養": "kyoyo",
+            "工学基礎": "kogakuKiso",
+            "工学基礎必修": "kogakuKiso",
+            "工学基礎必履修":"kogakuKiso",
+            "情報基礎必修": "johoKiso",
+            "情報応用必修": "johoOyo",
+            "英語必修": "kyoyo",
+            "誘い必修": "kyoyo",
+            "情報処理必修": "kyoyo",
+            "わかやま必修": "kyoyo"
+        };
+
         let targetUnits = {
-            kyoyo: 24,         // 教養教育科目
-            kogakuKiso: 16,    // 工学基礎科目
-            johoKiso: 12,      // 情報基礎科目
-            johoOyo: 4,        // 情報応用科目
-            major1: 28,        // 第1メジャー科目 (デフォルト値。tanikeisan.htmlから上書きされる)
-            major2: 14,        // 第2メジャー科目 (デフォルト値。tanikeisan.htmlから上書きされる)
-            otherMajor: 10,    // その他メジャー科目
-            sotsuken: 8,       // 卒業研究
-            jiyuSentaku: 8     // 自由選択科目
+            kyoyo: 24, kogakuKiso: 16, johoKiso: 12, johoOyo: 4,
+            major1: 28, major2: 14, otherMajor: 10, sotsuken: 8, jiyuSentaku: 8
         };
 
         const majorTargetUnits = {
             IS: { major1: 28, major2: 14 },
-            NC: { major1: 26, major2: 12 },
-            XD: { major1: 30, major2: 16 }
+            NC: { major1: 28, major2: 14 },
+            XD: { major1: 28, major2: 14 }
         };
 
         let tanisimulationChart; 
         let initialAcquiredUnitsFromStorage = {}; 
-        let selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // メジャー選択の初期値
+        let selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
+        let allSubjects = [];
 
         function calculateUnitsForSimulation(initialAcquiredUnits, plannedUnits) {
             const combinedAcquired = {};
@@ -323,7 +402,7 @@
                 const parsedData = JSON.parse(savedData);
                 selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' };
             } else {
-                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // Default if no data
+                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
             }
 
             targetUnits.major1 = majorTargetUnits[selectedMajorsFromStorage.major1].major1;
@@ -352,6 +431,16 @@
                 sotsuken: parseInt(document.getElementById('planSotsukenUnits').value) || 0,
                 jiyuSentaku: parseInt(document.getElementById('planJiyuSentakuUnits').value) || 0
             };
+
+            const dataToSave = {
+                acquiredUnits: initialAcquiredUnitsFromStorage,
+                selectedMajors: selectedMajorsFromStorage,
+                plannedUnits: plannedUnits,
+                checkedPlannedSubjects: getCheckedPlannedSubjectsState()
+            };
+            localStorage.setItem('tanisimulationData', JSON.stringify(dataToSave));
+            console.log('シミュレーションデータとチェック状態をローカルストレージに保存しました:', dataToSave);
+
 
             const results = calculateUnitsForSimulation(initialUnits, plannedUnits);
 
@@ -443,7 +532,7 @@
                             ticks: {
                                 stepSize: 1
                             },
-                            max: Math.max(...targetData) + 2 // Ensure max value is sufficient
+                            max: Math.max(...targetData) + 2
                         },
                         y: {
                             stacked: false
@@ -475,15 +564,153 @@
             });
         }
 
-        window.onload = function() {
-            // ローカルストレージから単位データとメジャー選択を読み込む
-            const savedData = localStorage.getItem('tanikeisanData');
+        // 科目データをFirebaseから読み込み、表示する関数
+        function loadSubjectsForSimulation() {
+            const subjectsRef = database.ref('syllabus_subjects');
+            subjectsRef.on('value', (snapshot) => {
+                const subjectsData = snapshot.val();
+                const subjectListDiv = document.getElementById('subjectListSimulation');
+                subjectListDiv.innerHTML = '';
+                allSubjects = [];
+
+                if (subjectsData) {
+                    allSubjects = Object.keys(subjectsData).map(key => ({
+                        id: key,
+                        ...subjectsData[key]
+                    }));
+
+                    allSubjects.forEach(subject => {
+                        console.log("科目データ (tanisimulation.html):", subject); // デバッグ用にログ出力
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.classList.add('subject-item');
+                        itemDiv.dataset.subjectId = subject.id;
+
+                        const checkboxIdPrefix = 'sim-chk'; // tanisimulation.html 用のプレフィックス
+
+                        // 最初のカラムにすべてのチェックボックスをまとめる
+                        let checkboxesInFirstColumn = '';
+                        if (subject.tag1) {
+                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
+                        }
+                        if (subject.tag2) {
+                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
+                        }
+                        if (subject.tag3) {
+                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
+                        }
+
+                        itemDiv.innerHTML = `
+                            <div>${checkboxesInFirstColumn}</div> <div>${subject.tag1 || ''}</div>     <div>${subject.tag2 || ''}</div>     <div>${subject.tag3 || ''}</div>     <div>${subject.tag4 || ''}</div>     <div>${subject.name || ''}</div>     <div class="units">${subject.units || 0}</div> `;
+                        subjectListDiv.appendChild(itemDiv);
+                    });
+                } else {
+                    subjectListDiv.innerHTML = '<p>科目データがありません。</p>';
+                }
+                restoreCheckedPlannedSubjectsState();
+            }, (error) => {
+                console.error("Firebaseから科目データの読み込みに失敗しました:", error);
+                alert("科目データの読み込みに失敗しました。インターネット接続を確認してください。");
+            });
+        }
+
+        function getCheckedPlannedSubjectsState() {
+            const checkedStates = {};
+            document.querySelectorAll('#subjectListSimulation input[type="checkbox"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedStates[checkbox.id] = true;
+                }
+            });
+            return checkedStates;
+        }
+
+        function restoreCheckedPlannedSubjectsState() {
+            const savedData = localStorage.getItem('tanisimulationData');
             if (savedData) {
                 const parsedData = JSON.parse(savedData);
-                initialAcquiredUnitsFromStorage = parsedData.acquiredUnits;
-                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' }; // フォールバック
+                const checkedPlannedSubjects = parsedData.checkedPlannedSubjects || {};
+                
+                document.querySelectorAll('#subjectListSimulation input[type="checkbox"]').forEach(checkbox => {
+                    if (checkedPlannedSubjects[checkbox.id]) {
+                        checkbox.checked = true;
+                    } else {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+        }
 
-                console.log('シミュレーションページでローカルストレージから単位データとメジャー選択を読み込みました:', parsedData);
+        function handlePlannedCheckboxChange(changedCheckbox) {
+            const subjectId = changedCheckbox.dataset.subjectId;
+            const checkboxesForSubject = document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`);
+
+            if (changedCheckbox.checked) {
+                checkboxesForSubject.forEach(cb => {
+                    if (cb !== changedCheckbox) {
+                        cb.checked = false;
+                    }
+                });
+            }
+            // チェックボックスの状態が変更されたら、自動的に再計算する
+            applyPlannedSubjects();
+        }
+
+        function applyPlannedSubjects() {
+            let tempPlannedUnits = {
+                kyoyo: 0, kogakuKiso: 0, johoKiso: 0, johoOyo: 0,
+                major1: 0, major2: 0, otherMajor: 0, sotsuken: 0, jiyuSentaku: 0
+            };
+
+            const major1Selected = selectedMajorsFromStorage.major1;
+            const major2Selected = selectedMajorsFromStorage.major2;
+            const majorTags = ['IS', 'NC', 'XD']; // すべてのメジャー関連タグ
+
+            document.querySelectorAll('#subjectListSimulation input[type="checkbox"]:checked').forEach(checkbox => {
+                const tag = checkbox.dataset.tag;
+                const units = parseInt(checkbox.dataset.units) || 0; // ここで単位数を数値として取得
+
+                let category = tagToCategoryMap[tag]; // まずは既存のマップで確認
+
+                // メジャー関連のタグの場合の特殊処理
+                if (majorTags.includes(tag)) {
+                    if (tag === major1Selected) {
+                        category = 'major1';
+                    } else if (tag === major2Selected) {
+                        category = 'major2';
+                    } else {
+                        // 選択されなかったメジャー科目は「その他メジャー科目」として扱う
+                        category = 'otherMajor';
+                    }
+                }
+
+                if (tempPlannedUnits.hasOwnProperty(category)) {
+                    tempPlannedUnits[category] += units;
+                } else {
+                    console.warn(`不明なカテゴリ: ${category} (タグ: ${tag})`);
+                }
+            });
+
+            document.getElementById('planKyoyoUnits').value = tempPlannedUnits.kyoyo;
+            document.getElementById('planKogakuKisoUnits').value = tempPlannedUnits.kogakuKiso;
+            document.getElementById('planJohoKisoUnits').value = tempPlannedUnits.johoKiso;
+            document.getElementById('planJohoOyoUnits').value = tempPlannedUnits.johoOyo;
+            document.getElementById('planMajor1Units').value = tempPlannedUnits.major1;
+            document.getElementById('planMajor2Units').value = tempPlannedUnits.major2;
+            document.getElementById('planOtherMajorUnits').value = tempPlannedUnits.otherMajor;
+            document.getElementById('planSotsukenUnits').value = tempPlannedUnits.sotsuken;
+            document.getElementById('planJiyuSentakuUnits').value = tempPlannedUnits.jiyuSentaku;
+
+            updateSimulation();
+        }
+
+        window.onload = function() {
+            const savedTanikeisanData = localStorage.getItem('tanikeisanData');
+            if (savedTanikeisanData) {
+                const parsedTanikeisanData = JSON.parse(savedTanikeisanData);
+                initialAcquiredUnitsFromStorage = parsedTanikeisanData.acquiredUnits || {};
+                selectedMajorsFromStorage = parsedTanikeisanData.selectedMajors || { major1: 'IS', major2: 'IS' };
+
+                console.log('シミュレーションページでローカルストレージから単位データとメジャー選択を読み込みました (tanikeisanData):', parsedTanikeisanData);
                 
                 document.getElementById('displayInitialKyoyoUnits').textContent = initialAcquiredUnitsFromStorage.kyoyo || 0;
                 document.getElementById('displayInitialKogakuKisoUnits').textContent = initialAcquiredUnitsFromStorage.kogakuKiso || 0;
@@ -497,14 +724,31 @@
             } else {
                 console.warn('ローカルストレージに単位データが見つかりませんでした。tanikeisan.html で単位を入力してください。');
                 alert('単位データが見つかりません。まず「単位計算」ページで現在の取得単位を入力してください。');
-                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' }; // データがない場合でもデフォルト設定
+                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
             }
             
-            // 読み込んだメジャー選択に基づいて表示ラベルと目標単位を更新
+            const savedTanisimulationData = localStorage.getItem('tanisimulationData');
+            if (savedTanisimulationData) {
+                const parsedTanisimulationData = JSON.parse(savedTanisimulationData);
+                const plannedUnits = parsedTanisimulationData.plannedUnits || {};
+
+                console.log('シミュレーションページでローカルストレージから予定単位データを読み込みました (tanisimulationData):', parsedTanisimulationData);
+
+                document.getElementById('planKyoyoUnits').value = plannedUnits.kyoyo || 0;
+                document.getElementById('planKogakuKisoUnits').value = plannedUnits.kogakuKiso || 0;
+                document.getElementById('planJohoKisoUnits').value = plannedUnits.johoKiso || 0;
+                document.getElementById('planJohoOyoUnits').value = plannedUnits.johoOyo || 0;
+                document.getElementById('planMajor1Units').value = plannedUnits.major1 || 0;
+                document.getElementById('planMajor2Units').value = plannedUnits.major2 || 0;
+                document.getElementById('planOtherMajorUnits').value = plannedUnits.otherMajor || 0;
+                document.getElementById('planSotsukenUnits').value = plannedUnits.sotsuken || 0;
+                document.getElementById('planJiyuSentakuUnits').value = plannedUnits.jiyuSentaku || 0;
+            } else {
+                console.warn('ローカルストレージにシミュレーション予定データが見つかりませんでした。初期値を使用します。');
+            }
+
             updateDisplayMajorLabelsAndTargets();
-            
-            // シミュレーション結果の更新とグラフ描画を実行
-            updateSimulation(); 
+            loadSubjectsForSimulation();
         };
     </script>
 </body>

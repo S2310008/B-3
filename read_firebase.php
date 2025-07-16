@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 require __DIR__ . '/vendor/autoload.php';
 
 use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount; // ★この行も必要です！もし抜けていたら追加！
+use Kreait\Firebase\ServiceAccount;
 
 function get_all_subjects_from_firebase(): array
 {

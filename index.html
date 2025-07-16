@@ -296,6 +296,7 @@
                     <a href="detail.html?code=${encodeURIComponent(subjectCode)}" target="_blank">
                         ${subject['科目名'] ?? '不明な科目'}
                         <div class="result-details">
+                            ${subject['教員名'] ?? '教員不明'} |
                             ${subject['曜限'] ?? '曜限不明'} | 
                             ${term} | 
                             ${subject['単位数'] ?? '?'}単位

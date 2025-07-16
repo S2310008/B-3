@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>科目詳細</title>
     <style>
-        /* CSSスタイルは変更なしで、そのまま残します */
+        /* スタイルは変更なし */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
@@ -97,13 +97,11 @@
     </div>
 
     <script type="module">
-        // ★変更点1: Firebaseのコア機能とRealtime Databaseの機能をインポートします
-        // 'https://www.gstatic.com/firebasejs/11.10.0/...' のバージョンはあなたのFirebase Consoleで見たものと合わせてください
+        // Firebaseモジュールをインポート
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js"; // getは一回取得用
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-        // ★変更点2: Firebase Consoleからコピーした正確な firebaseConfig オブジェクトをここに貼り付けます
-        // YOUR_API_KEY などはあなたの実際の値に置き換えてください
+        // Firebase設定
         const firebaseConfig = {
             apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU",
             authDomain: "b3app-b0c29.firebaseapp.com",
@@ -114,68 +112,63 @@
             appId: "1:1000910332829:web:a1bc233e638afed9b90574"
         };
 
-        // ★変更点3: Firebaseアプリとデータベースのインスタンスを初期化します
+        // Firebaseを初期化
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app); // Realtime Databaseのインスタンスを取得
+        const database = getDatabase(app);
 
-        // これ以降のJavaScriptコードは、これらの新しいFirebase関数を使います
-
+        // HTML要素を取得
         const loadingElement = document.getElementById('loading');
         const errorElement = document.getElementById('error');
         const subjectDetailContainer = document.getElementById('subject-detail');
 
         // URLから科目コードを取得
         const urlParams = new URLSearchParams(window.location.search);
-        const subjectCode = urlParams.get('code'); // 例: 'S1408230_S1'
+        const subjectCode = urlParams.get('code');
 
-        // ★変更点4: Firebaseから科目詳細データを取得する関数をモジュラーSDK形式に修正します
+        // 科目詳細を取得して表示する関数
         async function fetchSubjectDetail() {
             if (!subjectCode) {
                 loadingElement.style.display = 'none';
+                errorElement.textContent = 'エラー: 科目コードが指定されていません。';
                 errorElement.style.display = 'block';
-                errorElement.textContent = 'エラー: 科目コードがURLに指定されていません。';
                 return;
             }
 
-            loadingElement.style.display = 'block';
-            errorElement.style.display = 'none';
-
             try {
-                // Firebaseから指定された科目コードのデータのみを読み込む
-                // ★修正: database.ref('syllabus_subjects/' + subjectCode).once('value') の代わりに
-                // get(ref(database, 'syllabus_subjects/' + subjectCode)) を使います
+                // DBから科目データを取得
                 const snapshot = await get(ref(database, 'syllabus_subjects/' + subjectCode));
-
-                loadingElement.style.display = 'none'; // ローディングメッセージを非表示
+                loadingElement.style.display = 'none';
 
                 if (snapshot.exists()) {
-                    const subject = snapshot.val(); // 科目データ
+                    const subject = snapshot.val();
                     
-                    // HTMLコンテンツを動的に生成
+                    // 詳細情報をHTMLとして描画
                     subjectDetailContainer.innerHTML = `
                         <h2>${subject['科目名'] ?? '科目名不明'}</h2>
                         <table class="detail-table">
                             <tr><th>時間割コード</th><td>${subject['時間割コード'] ?? '不明'}</td></tr>
+                            <tr><th>担当教員</th><td>${subject['教員名'] ?? '不明'}</td></tr>
                             <tr><th>曜限</th><td>${subject['曜限'] ?? '不明'}</td></tr>
                             <tr><th>単位数</th><td>${subject['単位数'] ?? '不明'}</td></tr>
                             <tr><th>開講区分</th><td>${subject['開講区分'] ?? '不明'}</td></tr>
                             <tr><th class="overview">授業の概要</th><td class="overview">${subject['授業の概要'] ?? 'なし'}</td></tr>
                             <tr><th>関連科目</th><td>${subject['関連科目'] ?? 'なし'}</td></tr>
-                            </table>
+                        </table>
                     `;
                 } else {
+                    errorElement.textContent = `エラー: 科目コード "${subjectCode}" の情報が見つかりません。`;
                     errorElement.style.display = 'block';
-                    errorElement.textContent = `エラー: 科目コード "${subjectCode}" の情報がFirebaseに見つかりません。`;
                 }
             } catch (error) {
-                console.error("Firebaseからのデータ取得エラー:", error);
+                console.error("データ取得エラー:", error);
                 loadingElement.style.display = 'none';
+                errorElement.textContent = `情報の読み込みに失敗しました: ${error.message}`;
                 errorElement.style.display = 'block';
-                errorElement.textContent = `科目情報の読み込みに失敗しました: ${error.message}`;
             }
         }
 
-        fetchSubjectDetail(); // ページ読み込み時に詳細データを取得
+        // 実行
+        fetchSubjectDetail();
     </script>
 </body>
 </html>

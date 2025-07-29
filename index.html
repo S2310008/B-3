@@ -156,7 +156,7 @@
             border: 1px solid #ddd;
             margin-top: 5px;
         }
-        .tag-xd { background-color: #e0f2f1; color: #00897b; border-color: #b2dfdb; }
+        .tag-special-4 { background-color: #f3e5f5; color: #8e24aa; border-color: #e1bee7; }
 
     </style>
 </head>
@@ -283,10 +283,27 @@
                 const listItem = document.createElement('li');
 
                 let tagsHtml = '';
+                const tagSpans = [];//表示するタグのHTMLを保存する配列
+                if (subject.tag4) {
+                    tagSpans.push(`<span class="subject-tag tag-special-4">${subject.tag4}</span>`);
+                }
+                // tag1が存在する場合
                 if (subject.tag1) {
-                    const tagClass = subject.tag1 === 'XD' ? 'tag-xd' : '';
+                    tagSpans.push(`<span class="subject-tag">${subject.tag1}</span>`);
+                }
+                // tag2が存在する場合
+                if (subject.tag2) {
+                    tagSpans.push(`<span class="subject-tag">${subject.tag2}</span>`);
+                }
+                // tag3が存在する場合
+                if (subject.tag3) {
+                    tagSpans.push(`<span class="subject-tag">${subject.tag3}</span>`);
+                }
+
+                //HTMLの組み立て
+                if (tagSpans.length > 0) {
                     tagsHtml = `<div style="margin-top:5px;">
-                                    <span class="subject-tag ${tagClass}">${subject.tag1}</span>
+                                    ${tagSpans.join(' ')}
                                 </div>`;
                 }
                 

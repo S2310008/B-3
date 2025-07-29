@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="firebase-config.js"></script>
     <style>
-        /* (スタイルは変更なしなので省略) */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { max-width: 950px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0056b3; }
@@ -62,6 +61,31 @@
             background-color: #5a6268;
         }
 
+        /* ----- 時間割表示用のスタイル ----- */
+        .timetable-tabs {
+            display: flex;
+            flex-wrap: wrap; /* 小さい画面で折り返す */
+            gap: 5px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .timetable-tabs button {
+            padding: 8px 12px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 60px; /* ボタンの最小幅 */
+            margin-top: 0; /* デフォルトボタンのmargin-topをリセット */
+        }
+        .timetable-tabs button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
         .subject-list-container {
             margin-top: 20px;
             max-height: 400px;
@@ -71,10 +95,10 @@
             padding: 10px;
             background-color: #f9f9f9;
         }
-        .subject-item {
+        .subject-header, .subject-item {
             display: grid;
-            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
-            gap: 10px;
+            grid-template-columns: 70px 20px 70px 20px 70px 20px 100px 1fr 60px;
+            gap: 5px;
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px dashed #eee;
@@ -89,21 +113,24 @@
         }
         .subject-item input[type="checkbox"] {
             margin: 0;
-        }
-        .subject-header {
-            font-weight: bold;
-            background-color: #e2e2e2;
-            padding: 8px 0;
-            border-bottom: 2px solid #ccc;
-            display: grid;
-            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
-            gap: 10px;
+            justify-self: center;
+            width: 16px;
+            height: 16px;
         }
         .subject-header div {
             text-align: center;
+            white-space: nowrap;
         }
-        .subject-header div:nth-child(6) { text-align: left; }
+        .subject-header div:nth-child(1), .subject-item div:nth-child(1) { text-align: center; }
+        .subject-header div:nth-child(2), .subject-item div:nth-child(2) { text-align: center; }
+        .subject-header div:nth-child(3), .subject-item div:nth-child(3) { text-align: center; }
+        .subject-header div:nth-child(4), .subject-item div:nth-child(4) { text-align: center; }
+        .subject-header div:nth-child(5), .subject-item div:nth-child(5) { text-align: center; }
+        .subject-header div:nth-child(6), .subject-item div:nth-child(6) { text-align: center; }
         .subject-header div:nth-child(7) { text-align: center; }
+        .subject-header div:nth-child(8) { text-align: left; }
+        .subject-header div:nth-child(9) { text-align: center; }
+
         .subject-item .units {
             text-align: center;
         }
@@ -156,65 +183,63 @@
         </div>
 
         <hr>
-        <h2>これから取得する予定の科目一覧</h2>
-        <p>これから取得する科目にチェックを入れて、予定単位を自動で加算できます。</p>
+        <h2>これから取得する予定の科目一覧 (時間割)</h2>
+        <p>表示したい時間割をクリックし、取得予定の科目にチェックを入れてください。どこの時間割にも含まれていない科目は「その他」を選択してください。</p>
+        <div class="timetable-tabs" id="timetableTabsSimulation">
+            </div>
+
         <div class="subject-list-container">
             <div class="subject-header">
-                <div></div>
                 <div>Tag1</div>
-                <div>Tag2</div>
-                <div>Tag3</div>
-                <div>Tag4</div>
+                <div></div> <div>Tag2</div>
+                <div></div> <div>Tag3</div>
+                <div></div> <div>Tag4</div>
                 <div>科目名</div>
                 <div>単位</div>
             </div>
             <div id="subjectListSimulation">
-                </div>
+            </div>
         </div>
-        <button onclick="applyPlannedSubjects()">チェックした科目を予定に加算</button>
-
         <hr>
-        <h2>これから取得する予定の単位数</h2>
+        <h2>これから取得する予定の単位数（科目チェックと連動）</h2>
         <div class="input-section plan-units">
             <div>
                 <label for="planKyoyoUnits">教養教育科目（予定）:</label>
-                <input type="number" id="planKyoyoUnits" value="0" min="0"> 単位
+                <input type="number" id="planKyoyoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planKogakuKisoUnits">工学基礎科目（予定）:</label>
-                <input type="number" id="planKogakuKisoUnits" value="0" min="0"> 単位
+                <input type="number" id="planKogakuKisoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planJohoKisoUnits">情報基礎科目（予定）:</label>
-                <input type="number" id="planJohoKisoUnits" value="0" min="0"> 単位
+                <input type="number" id="planJohoKisoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planJohoOyoUnits">情報応用科目（予定）:</label>
-                <input type="number" id="planJohoOyoUnits" value="0" min="0"> 単位
+                <input type="number" id="planJohoOyoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planMajor1Units"><span id="planMajor1Label">第1メジャー科目</span>（予定）:</label>
-                <input type="number" id="planMajor1Units" value="0" min="0"> 単位
+                <input type="number" id="planMajor1Units" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planMajor2Units"><span id="planMajor2Label">第2メジャー科目</span>（予定）:</label>
-                <input type="number" id="planMajor2Units" value="0" min="0"> 単位
+                <input type="number" id="planMajor2Units" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planOtherMajorUnits">その他メジャー科目（予定）:</label>
-                <input type="number" id="planOtherMajorUnits" value="0" min="0"> 単位
+                <input type="number" id="planOtherMajorUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planSotsukenUnits">卒業研究（予定）:</label>
-                <input type="number" id="planSotsukenUnits" value="0" min="0"> 単位
+                <input type="number" id="planSotsukenUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
             <div>
                 <label for="planJiyuSentakuUnits">自由選択科目（予定）:</label>
-                <input type="number" id="planJiyuSentakuUnits" value="0" min="0"> 単位
+                <input type="number" id="planJiyuSentakuUnits" value="0" min="0" onchange="updateSimulation()"> 単位
             </div>
         </div>
-
-        <button onclick="updateSimulation()">シミュレーションする</button>
 
         <div class="results-section">
             <h2>シミュレーション結果（最終的な単位状況）</h2>
@@ -302,6 +327,22 @@
         let initialAcquiredUnitsFromStorage = {}; 
         let selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
         let allSubjects = [];
+        let currentSimulationFilter = '月／Mon　1'; // シミュレーションページの初期フィルター (全角スペースに修正)
+
+        // 曜日と時限の定義 (データベース表記に合わせる)
+        const daysShort = ['月', '火', '水', '木', '金'];
+        const daysFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const periods = ['1', '2', '3', '4', '5', '6'];
+        const allTimeSlots = [];
+
+        // 月曜から金曜まで、1限から6限の順に追加 (全角スペースを使用)
+        daysShort.forEach((dayShort, index) => {
+            periods.forEach(period => {
+                allTimeSlots.push(`${dayShort}／${daysFull[index]}　${period}`);
+            });
+        });
+        allTimeSlots.push('他／Otr'); // 最後にその他の科目も追加
+
 
         function calculateUnitsForSimulation(initialAcquiredUnits, plannedUnits) {
             const combinedAcquired = {};
@@ -324,6 +365,13 @@
                 currentAcquired.otherMajor += major2Overflow;
                 currentAcquired.major2 = targetUnits.major2;
             }
+
+            const otherMajorToJiyuSentaku = Math.max(0, currentAcquired.otherMajor - targetUnits.otherMajor);
+            if (otherMajorToJiyuSentaku > 0) {
+                currentAcquired.jiyuSentaku += otherMajorToJiyuSentaku;
+                currentAcquired.otherMajor = targetUnits.otherMajor;
+            }
+
 
             const kyoyoOverflow = Math.max(0, currentAcquired.kyoyo - targetUnits.kyoyo);
             if (kyoyoOverflow > 0) {
@@ -349,11 +397,6 @@
                 currentAcquired.johoOyo = targetUnits.johoOyo;
             }
 
-            const otherMajorOverflow = Math.max(0, currentAcquired.otherMajor - targetUnits.otherMajor);
-            if (otherMajorOverflow > 0) {
-                currentAcquired.jiyuSentaku += otherMajorOverflow;
-                currentAcquired.otherMajor = targetUnits.otherMajor;
-            }
 
             const finalResults = {};
             let totalAcquiredForGraduation = 0;
@@ -373,13 +416,13 @@
                 }
             }
             
-            finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku);
-            totalAcquiredForGraduation += currentAcquired.jiyuSentaku;
+            finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku); // ここは目標に対して不足している分
+            totalAcquiredForGraduation += currentAcquired.jiyuSentaku; // 合計には取得した分全てを足す
 
             finalResults.totalAcquired = totalAcquiredForGraduation;
 
             for (const category in finalResults) {
-                if (finalResults.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining') {
+                if (finalResults.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining' && category !== 'totalTargetUnits' && category !== 'finalCategoryAcquired' && category !== 'currentAcquired') {
                     totalRemainingSum += finalResults[category];
                 }
             }
@@ -436,7 +479,8 @@
                 acquiredUnits: initialAcquiredUnitsFromStorage,
                 selectedMajors: selectedMajorsFromStorage,
                 plannedUnits: plannedUnits,
-                checkedPlannedSubjects: getCheckedPlannedSubjectsState()
+                checkedPlannedSubjects: getCheckedPlannedSubjectsState(),
+                currentSimulationFilter: currentSimulationFilter
             };
             localStorage.setItem('tanisimulationData', JSON.stringify(dataToSave));
             console.log('シミュレーションデータとチェック状態をローカルストレージに保存しました:', dataToSave);
@@ -569,8 +613,6 @@
             const subjectsRef = database.ref('syllabus_subjects');
             subjectsRef.on('value', (snapshot) => {
                 const subjectsData = snapshot.val();
-                const subjectListDiv = document.getElementById('subjectListSimulation');
-                subjectListDiv.innerHTML = '';
                 allSubjects = [];
 
                 if (subjectsData) {
@@ -578,83 +620,31 @@
                         id: key,
                         ...subjectsData[key]
                     }));
-
-                    allSubjects.forEach(subject => {
-                        console.log("科目データ (tanisimulation.html):", subject); // デバッグ用にログ出力
-
-                        const itemDiv = document.createElement('div');
-                        itemDiv.classList.add('subject-item');
-                        itemDiv.dataset.subjectId = subject.id;
-
-                        const checkboxIdPrefix = 'sim-chk'; // tanisimulation.html 用のプレフィックス
-
-                        // 最初のカラムにすべてのチェックボックスをまとめる
-                        let checkboxesInFirstColumn = '';
-                        if (subject.tag1) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
-                        }
-                        if (subject.tag2) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
-                        }
-                        if (subject.tag3) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)">`;
-                        }
-
-                        itemDiv.innerHTML = `
-                            <div>${checkboxesInFirstColumn}</div> <div>${subject.tag1 || ''}</div>     <div>${subject.tag2 || ''}</div>     <div>${subject.tag3 || ''}</div>     <div>${subject.tag4 || ''}</div>     <div>${subject.name || ''}</div>     <div class="units">${subject.units || 0}</div> `;
-                        subjectListDiv.appendChild(itemDiv);
-                    });
                 } else {
-                    subjectListDiv.innerHTML = '<p>科目データがありません。</p>';
+                    console.warn('科目データがありません。');
                 }
-                restoreCheckedPlannedSubjectsState();
+                restoreSimulationSavedState(); // フィルターとチェックボックスの状態を復元
+                displaySubjectsByFilterSimulation(currentSimulationFilter); // 読み込み後、現在のフィルターで表示
             }, (error) => {
                 console.error("Firebaseから科目データの読み込みに失敗しました:", error);
                 alert("科目データの読み込みに失敗しました。インターネット接続を確認してください。");
             });
         }
 
-        function getCheckedPlannedSubjectsState() {
-            const checkedStates = {};
-            document.querySelectorAll('#subjectListSimulation input[type="checkbox"]').forEach(checkbox => {
-                if (checkbox.checked) {
-                    checkedStates[checkbox.id] = true;
-                }
-            });
-            return checkedStates;
-        }
-
-        function restoreCheckedPlannedSubjectsState() {
-            const savedData = localStorage.getItem('tanisimulationData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                const checkedPlannedSubjects = parsedData.checkedPlannedSubjects || {};
-                
-                document.querySelectorAll('#subjectListSimulation input[type="checkbox"]').forEach(checkbox => {
-                    if (checkedPlannedSubjects[checkbox.id]) {
-                        checkbox.checked = true;
-                    } else {
+        // 修正: シミュレーション側でも単一選択にする
+        function handlePlannedCheckboxChange(changedCheckbox) {
+            if (changedCheckbox.checked) {
+                const subjectId = changedCheckbox.dataset.subjectId;
+                document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`).forEach(checkbox => {
+                    if (checkbox !== changedCheckbox) {
                         checkbox.checked = false;
                     }
                 });
             }
+            applyPlannedSubjects(); // ★重要: チェックボックスの変更時に自動的に再計算
         }
 
-        function handlePlannedCheckboxChange(changedCheckbox) {
-            const subjectId = changedCheckbox.dataset.subjectId;
-            const checkboxesForSubject = document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`);
-
-            if (changedCheckbox.checked) {
-                checkboxesForSubject.forEach(cb => {
-                    if (cb !== changedCheckbox) {
-                        cb.checked = false;
-                    }
-                });
-            }
-            // チェックボックスの状態が変更されたら、自動的に再計算する
-            applyPlannedSubjects();
-        }
-
+        // シミュレーションで計画されている科目の合計単位を計算し、入力フィールドを更新
         function applyPlannedSubjects() {
             let tempPlannedUnits = {
                 kyoyo: 0, kogakuKiso: 0, johoKiso: 0, johoOyo: 0,
@@ -665,20 +655,19 @@
             const major2Selected = selectedMajorsFromStorage.major2;
             const majorTags = ['IS', 'NC', 'XD']; // すべてのメジャー関連タグ
 
-            document.querySelectorAll('#subjectListSimulation input[type="checkbox"]:checked').forEach(checkbox => {
+            // 現在チェックされているすべての科目から単位を加算
+            document.querySelectorAll('input[type="checkbox"][id^="sim-chk-"]:checked').forEach(checkbox => {
                 const tag = checkbox.dataset.tag;
-                const units = parseInt(checkbox.dataset.units) || 0; // ここで単位数を数値として取得
+                const units = parseInt(checkbox.dataset.units) || 0; 
 
-                let category = tagToCategoryMap[tag]; // まずは既存のマップで確認
+                let category = tagToCategoryMap[tag];
 
-                // メジャー関連のタグの場合の特殊処理
                 if (majorTags.includes(tag)) {
                     if (tag === major1Selected) {
                         category = 'major1';
                     } else if (tag === major2Selected) {
                         category = 'major2';
                     } else {
-                        // 選択されなかったメジャー科目は「その他メジャー科目」として扱う
                         category = 'otherMajor';
                     }
                 }
@@ -700,18 +689,102 @@
             document.getElementById('planSotsukenUnits').value = tempPlannedUnits.sotsuken;
             document.getElementById('planJiyuSentakuUnits').value = tempPlannedUnits.jiyuSentaku;
 
-            updateSimulation();
+            updateSimulation(); // チェックボックスの変更時にシミュレーションを更新
         }
 
-        window.onload = function() {
-            const savedTanikeisanData = localStorage.getItem('tanikeisanData');
-            if (savedTanikeisanData) {
-                const parsedTanikeisanData = JSON.parse(savedTanikeisanData);
-                initialAcquiredUnitsFromStorage = parsedTanikeisanData.acquiredUnits || {};
-                selectedMajorsFromStorage = parsedTanikeisanData.selectedMajors || { major1: 'IS', major2: 'IS' };
+        // 選択された曜限の科目を表示する関数（シミュレーション用）
+        function displaySubjectsByFilterSimulation(filter) {
+            currentSimulationFilter = filter;
+            const subjectListDiv = document.getElementById('subjectListSimulation');
+            subjectListDiv.innerHTML = ''; // リストをクリア
 
-                console.log('シミュレーションページでローカルストレージから単位データとメジャー選択を読み込みました (tanikeisanData):', parsedTanikeisanData);
+            // アクティブなボタンを更新
+            document.querySelectorAll('#timetableTabsSimulation button').forEach(button => {
+                if (button.dataset.filter === filter) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+
+            let filteredSubjects = [];
+
+            if (filter === '他／Otr') {
+                const standardTimeSlots = allTimeSlots.slice(0, -1); // '他／Otr'を除く標準的な曜限
+
+                filteredSubjects = allSubjects.filter(subject => {
+                    const yougen = subject['曜限'];
+                    if (!yougen) return true; // 曜限が未定義・null・空の場合も「その他」に含める
+                    
+                    if (Array.isArray(yougen)) {
+                        const containsOtr = yougen.includes('他／Otr');
+                        const containsAnyStandardSlot = yougen.some(y => standardTimeSlots.includes(y));
+                        return containsOtr || (!containsAnyStandardSlot && yougen.length > 0);
+                    } else if (typeof yougen === 'string') {
+                        return yougen === '他／Otr' || !standardTimeSlots.includes(yougen);
+                    }
+                    return false;
+                });
+
+            } else {
+                // 通常の曜限フィルター
+                filteredSubjects = allSubjects.filter(subject => {
+                    const yougen = subject['曜限'];
+                    if (Array.isArray(yougen)) {
+                        return yougen.includes(filter);
+                    } else if (typeof yougen === 'string') {
+                        return yougen === filter;
+                    }
+                    return false;
+                });
+            }
+
+            filteredSubjects.forEach(subject => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('subject-item');
+                itemDiv.dataset.subjectId = subject.id;
+
+                const tag1Content = subject.tag1 ? `<div>${subject.tag1}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
+                const tag2Content = subject.tag2 ? `<div>${subject.tag2}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
+                const tag3Content = subject.tag3 ? `<div>${subject.tag3}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
                 
+                itemDiv.innerHTML = `
+                    ${tag1Content}
+                    ${tag2Content}
+                    ${tag3Content}
+                    <div>${subject.tag4 || ''}</div>
+                    <div>${subject['科目名'] || ''}</div>
+                    <div class="units">${subject['単位数'] || 0}</div>
+                `;
+                subjectListDiv.appendChild(itemDiv);
+            });
+            restoreCheckedPlannedSubjectsState(); // 復元されたチェックボックスの状態を適用
+        }
+
+        // 時間割タブを生成する関数（シミュレーション用）
+        function createTimetableTabsSimulation() {
+            const timetableTabsDiv = document.getElementById('timetableTabsSimulation');
+            timetableTabsDiv.innerHTML = ''; // クリア
+
+            allTimeSlots.forEach(slot => {
+                const button = document.createElement('button');
+                // データベース表記の "月／Mon　1" を "月/Mon 1" のように表示
+                // ここで全角スペースを半角スペースに変換して表示
+                button.textContent = slot.replace('／', '/').replace('Mon', '月').replace('Tue', '火').replace('Wed', '水').replace('Thu', '木').replace('Fri', '金').replace('Otr', 'その他').replace('　', ' '); 
+                button.dataset.filter = slot;
+                button.onclick = () => displaySubjectsByFilterSimulation(slot);
+                timetableTabsDiv.appendChild(button);
+            });
+        }
+        
+        // tanikeisan.htmlから単位データを読み込む関数
+        function loadInitialAcquiredUnits() {
+            const savedData = localStorage.getItem('tanikeisanData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                initialAcquiredUnitsFromStorage = parsedData.acquiredUnits || {};
+                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' };
+
                 document.getElementById('displayInitialKyoyoUnits').textContent = initialAcquiredUnitsFromStorage.kyoyo || 0;
                 document.getElementById('displayInitialKogakuKisoUnits').textContent = initialAcquiredUnitsFromStorage.kogakuKiso || 0;
                 document.getElementById('displayInitialJohoKisoUnits').textContent = initialAcquiredUnitsFromStorage.johoKiso || 0;
@@ -721,35 +794,63 @@
                 document.getElementById('displayInitialOtherMajorUnits').textContent = initialAcquiredUnitsFromStorage.otherMajor || 0;
                 document.getElementById('displayInitialSotsukenUnits').textContent = initialAcquiredUnitsFromStorage.sotsuken || 0;
                 document.getElementById('displayInitialJiyuSentakuUnits').textContent = initialAcquiredUnitsFromStorage.jiyuSentaku || 0;
+                
+                updateDisplayMajorLabelsAndTargets(); // メジャーラベルと目標単位を更新
             } else {
-                console.warn('ローカルストレージに単位データが見つかりませんでした。tanikeisan.html で単位を入力してください。');
-                alert('単位データが見つかりません。まず「単位計算」ページで現在の取得単位を入力してください。');
-                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
+                console.warn('tanikeisanData がローカルストレージに見つかりませんでした。初期値を使用します。');
             }
-            
-            const savedTanisimulationData = localStorage.getItem('tanisimulationData');
-            if (savedTanisimulationData) {
-                const parsedTanisimulationData = JSON.parse(savedTanisimulationData);
-                const plannedUnits = parsedTanisimulationData.plannedUnits || {};
-
-                console.log('シミュレーションページでローカルストレージから予定単位データを読み込みました (tanisimulationData):', parsedTanisimulationData);
-
-                document.getElementById('planKyoyoUnits').value = plannedUnits.kyoyo || 0;
-                document.getElementById('planKogakuKisoUnits').value = plannedUnits.kogakuKiso || 0;
-                document.getElementById('planJohoKisoUnits').value = plannedUnits.johoKiso || 0;
-                document.getElementById('planJohoOyoUnits').value = plannedUnits.johoOyo || 0;
-                document.getElementById('planMajor1Units').value = plannedUnits.major1 || 0;
-                document.getElementById('planMajor2Units').value = plannedUnits.major2 || 0;
-                document.getElementById('planOtherMajorUnits').value = plannedUnits.otherMajor || 0;
-                document.getElementById('planSotsukenUnits').value = plannedUnits.sotsuken || 0;
-                document.getElementById('planJiyuSentakuUnits').value = plannedUnits.jiyuSentaku || 0;
-            } else {
-                console.warn('ローカルストレージにシミュレーション予定データが見つかりませんでした。初期値を使用します。');
+        }
+        
+        // シミュレーションデータの復元
+        function restoreSimulationSavedState() {
+            const savedData = localStorage.getItem('tanisimulationData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                if (parsedData.plannedUnits) {
+                    document.getElementById('planKyoyoUnits').value = parsedData.plannedUnits.kyoyo || 0;
+                    document.getElementById('planKogakuKisoUnits').value = parsedData.plannedUnits.kogakuKiso || 0;
+                    document.getElementById('planJohoKisoUnits').value = parsedData.plannedUnits.johoKiso || 0;
+                    document.getElementById('planJohoOyoUnits').value = parsedData.plannedUnits.johoOyo || 0;
+                    document.getElementById('planMajor1Units').value = parsedData.plannedUnits.major1 || 0;
+                    document.getElementById('planMajor2Units').value = parsedData.plannedUnits.major2 || 0;
+                    document.getElementById('planOtherMajorUnits').value = parsedData.plannedUnits.otherMajor || 0;
+                    document.getElementById('planSotsukenUnits').value = parsedData.plannedUnits.sotsuken || 0;
+                    document.getElementById('planJiyuSentakuUnits').value = parsedData.plannedUnits.jiyuSentaku || 0;
+                }
+                currentSimulationFilter = parsedData.currentSimulationFilter || '月／Mon　1'; // フィルター状態を復元 (全角スペースに修正)
             }
+            // チェックボックスの状態はdisplaySubjectsByFilterSimulationの後にrestoreCheckedPlannedSubjectsStateで適用
+        }
 
-            updateDisplayMajorLabelsAndTargets();
-            loadSubjectsForSimulation();
-        };
+        // チェックボックスの状態をローカルストレージから復元する関数（シミュレーション用）
+        function restoreCheckedPlannedSubjectsState() {
+            const savedData = localStorage.getItem('tanisimulationData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                const checkedPlannedSubjects = parsedData.checkedPlannedSubjects || {};
+                
+                // すべての科目データの中から、保存されたIDを持つチェックボックスを特定し、状態を復元
+                allSubjects.forEach(subject => {
+                    ['tag1', 'tag2', 'tag3'].forEach(tagKey => {
+                        const checkboxId = `sim-chk-${subject.id}-${tagKey}`;
+                        const checkbox = document.getElementById(checkboxId);
+                        if (checkbox) {
+                            checkbox.checked = !!checkedPlannedSubjects[checkbox.id];
+                        }
+                    });
+                });
+            }
+            applyPlannedSubjects(); // 復元後にシミュレーションを更新
+        }
+
+
+        // 初期ロード時の処理
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInitialAcquiredUnits(); // 前ページからの単位とメジャー情報をロード
+            createTimetableTabsSimulation(); // 時間割タブの生成
+            loadSubjectsForSimulation(); // シミュレーション用科目リストの読み込みと表示
+        });
+
     </script>
 </body>
 </html>

@@ -9,32 +9,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="firebase-config.js"></script>
     <style>
-        /* (スタイルは変更なしなので省略) */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { max-width: 950px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0056b3; }
         p { margin-bottom: 15px; }
-        .input-section div, .major-selection-section div {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        .input-section label, .major-selection-section label {
-            flex: 0 0 180px;
-            margin-right: 10px;
-            font-weight: bold;
-            color: #555;
-        }
-        .input-section input[type="number"], .major-selection-section select {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            max-width: 80px;
-        }
-        .major-selection-section select {
-            max-width: 100px;
-        }
+        .input-section div, .display-section div { margin-bottom: 10px; display: flex; align-items: center; }
+        .input-section label, .display-section label { flex: 0 0 220px; margin-right: 10px; font-weight: bold; color: #555; }
+        .input-section input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; max-width: 80px; }
+        .display-unit-value { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-width: 80px; background-color: #f9f9f9; color: #666; text-align: right;}
+
         button {
             padding: 10px 20px;
             background-color: #007bff;
@@ -47,14 +30,15 @@
             transition: background-color 0.3s ease;
         }
         button:hover { background-color: #0056b3; }
+        .results-section { margin-top: 20px; }
         .results-section div { margin-bottom: 8px; }
         .result-item { font-weight: bold; color: #0056b3; display: inline-block; width: 220px; }
         .total-summary { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
         .total-summary .result-item { color: #d9534f; }
-        .total-summary #resultTotalAcquired { color: #28a745; }
+        .total-summary #totalAcquired { color: #28a745; }
         .chart-container {
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
             margin: 30px auto;
             background-color: #fff;
             padding: 20px;
@@ -77,6 +61,31 @@
             background-color: #5a6268;
         }
 
+        /* ----- 時間割表示用のスタイル ----- */
+        .timetable-tabs {
+            display: flex;
+            flex-wrap: wrap; /* 小さい画面で折り返す */
+            gap: 5px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .timetable-tabs button {
+            padding: 8px 12px;
+            background-color: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 60px; /* ボタンの最小幅 */
+            margin-top: 0; /* デフォルトボタンのmargin-topをリセット */
+        }
+        .timetable-tabs button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
         .subject-list-container {
             margin-top: 20px;
             max-height: 400px;
@@ -86,10 +95,10 @@
             padding: 10px;
             background-color: #f9f9f9;
         }
-        .subject-item {
+        .subject-header, .subject-item {
             display: grid;
-            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
-            gap: 10px;
+            grid-template-columns: 70px 20px 70px 20px 70px 20px 100px 1fr 60px;
+            gap: 5px;
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px dashed #eee;
@@ -104,21 +113,24 @@
         }
         .subject-item input[type="checkbox"] {
             margin: 0;
-        }
-        .subject-header {
-            font-weight: bold;
-            background-color: #e2e2e2;
-            padding: 8px 0;
-            border-bottom: 2px solid #ccc;
-            display: grid;
-            grid-template-columns: 20px 80px 80px 80px 100px 1fr 60px;
-            gap: 10px;
+            justify-self: center;
+            width: 16px;
+            height: 16px;
         }
         .subject-header div {
             text-align: center;
+            white-space: nowrap;
         }
-        .subject-header div:nth-child(6) { text-align: left; }
+        .subject-header div:nth-child(1), .subject-item div:nth-child(1) { text-align: center; }
+        .subject-header div:nth-child(2), .subject-item div:nth-child(2) { text-align: center; }
+        .subject-header div:nth-child(3), .subject-item div:nth-child(3) { text-align: center; }
+        .subject-header div:nth-child(4), .subject-item div:nth-child(4) { text-align: center; }
+        .subject-header div:nth-child(5), .subject-item div:nth-child(5) { text-align: center; }
+        .subject-header div:nth-child(6), .subject-item div:nth-child(6) { text-align: center; }
         .subject-header div:nth-child(7) { text-align: center; }
+        .subject-header div:nth-child(8) { text-align: left; }
+        .subject-header div:nth-child(9) { text-align: center; }
+
         .subject-item .units {
             text-align: center;
         }
@@ -128,137 +140,136 @@
     <div class="container">
         <h1>単位計算</h1>
 
-        <p>各科目の取得済み単位数を入力して、卒業までの残り単位を計算しましょう。</p>
+        <p>履修した科目にチェックを入れて、現在の取得単位数を計算できます。あなたのメジャー科目を選択してください。</p>
 
-        <h2>メジャー選択</h2>
-        <div class="major-selection-section">
-            <div>
-                <label for="major1Select">第1メジャー:</label>
-                <select id="major1Select">
-                    <option value="IS">IS (情報システム)</option>
-                    <option value="NC">NC (ネットワークコンピューティング)</option>
-                    <option value="XD">XD (XD)</option>
-                </select>
-            </div>
-            <div>
-                <label for="major2Select">第2メジャー:</label>
-                <select id="major2Select">
-                    <option value="IS">IS (情報システム)</option>
-                    <option value="NC">NC (ネットワークコンピューティング)</option>
-                    <option value="XD">XD (XD)</option>
-                </select>
-            </div>
-        </div>
-
-        <h2>現在の取得単位数</h2>
         <div class="input-section">
             <div>
-                <label for="kyoyoUnits">教養教育科目:</label>
-                <input type="number" id="kyoyoUnits" value="0" min="0"> 単位
+                <label for="major1Select">第1メジャーを選択:</label>
+                <select id="major1Select" onchange="updateCalculations()">
+                    <option value="IS">情報科学メジャー(IS)</option>
+                    <option value="NC">ネットワーク・コンピューティングメジャー(NC)</option>
+                    <option value="XD">知能情報システムメジャー(XD)</option>
+                </select>
             </div>
             <div>
-                <label for="kogakuKisoUnits">工学基礎科目:</label>
-                <input type="number" id="kogakuKisoUnits" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="johoKisoUnits">情報基礎科目:</label>
-                <input type="number" id="johoKisoUnits" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="johoOyoUnits">情報応用科目:</label>
-                <input type="number" id="johoOyoUnits" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="major1Units"><span id="major1Label">第1メジャー科目</span>:</label>
-                <input type="number" id="major1Units" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="major2Units"><span id="major2Label">第2メジャー科目</span>:</label>
-                <input type="number" id="major2Units" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="otherMajorUnits">その他メジャー科目:</label>
-                <input type="number" id="otherMajorUnits" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="sotsukenUnits">卒業研究:</label>
-                <input type="number" id="sotsukenUnits" value="0" min="0"> 単位
-            </div>
-            <div>
-                <label for="jiyuSentakuUnits">自由選択科目:</label>
-                <input type="number" id="jiyuSentakuUnits" value="0" min="0"> 単位
+                <label for="major2Select">第2メジャーを選択:</label>
+                <select id="major2Select" onchange="updateCalculations()">
+                    <option value="IS">情報科学メジャー(IS)</option>
+                    <option value="NC">ネットワーク・コンピューティングメジャー(NC)</option>
+                    <option value="XD">知能情報システムメジャー(XD)</option>
+                </select>
             </div>
         </div>
 
-        <button onclick="updateCalculations()">計算する</button>
-
         <hr>
-        <h2>取得済み科目一覧</h2>
-        <p>取得済みの科目にチェックを入れて、単位を自動で加算できます。</p>
+        <h2>科目一覧 (時間割)</h2>
+        <p>表示したい時間割をクリックしてください。どこの時間割にも含まれていない科目は「その他」を選択してください。</p>
+        <div class="timetable-tabs" id="timetableTabs">
+            </div>
+
         <div class="subject-list-container">
             <div class="subject-header">
-                <div></div>
                 <div>Tag1</div>
-                <div>Tag2</div>
-                <div>Tag3</div>
-                <div>Tag4</div>
+                <div></div> <div>Tag2</div>
+                <div></div> <div>Tag3</div>
+                <div></div> <div>Tag4</div>
                 <div>科目名</div>
                 <div>単位</div>
             </div>
             <div id="subjectList">
                 </div>
         </div>
-        <button onclick="applyCheckedSubjects()">チェックした科目を加算</button>
+        <div class="input-section">
+            <p>※チェックした科目以外に取得済みの単位があれば、以下に手動で入力してください。</p>
+            <div>
+                <label for="manualKyoyoUnits">教養教育科目（手動追加）:</label>
+                <input type="number" id="manualKyoyoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualKogakuKisoUnits">工学基礎科目（手動追加）:</label>
+                <input type="number" id="manualKogakuKisoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualJohoKisoUnits">情報基礎科目（手動追加）:</label>
+                <input type="number" id="manualJohoKisoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualJohoOyoUnits">情報応用科目（手動追加）:</label>
+                <input type="number" id="manualJohoOyoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualMajor1Units"><span id="manualMajor1Label">第1メジャー科目</span>（手動追加）:</label>
+                <input type="number" id="manualMajor1Units" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualMajor2Units"><span id="manualMajor2Label">第2メジャー科目</span>（手動追加）:</label>
+                <input type="number" id="manualMajor2Units" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualOtherMajorUnits">その他メジャー科目（手動追加）:</label>
+                <input type="number" id="manualOtherMajorUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualSotsukenUnits">卒業研究（手動追加）:</label>
+                <input type="number" id="manualSotsukenUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+            <div>
+                <label for="manualJiyuSentakuUnits">自由選択科目（手動追加）:</label>
+                <input type="number" id="manualJiyuSentakuUnits" value="0" min="0" onchange="updateCalculations()"> 単位
+            </div>
+        </div>
 
-        <hr>
         <div class="results-section">
-            <h2>計算結果</h2>
+            <h2>取得単位数合計</h2>
             <div>
-                <span class="result-item">教養教育科目 残り:</span> <span id="resultKyoyo">0</span> 単位
+                <span class="result-item">教養教育科目:</span> <span id="acquiredKyoyo">0</span> / <span id="targetKyoyo">24</span> 単位 (<span id="remainingKyoyo">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">工学基礎科目 残り:</span> <span id="resultKogakuKiso">0</span> 単位
+                <span class="result-item">工学基礎科目:</span> <span id="acquiredKogakuKiso">0</span> / <span id="targetKogakuKiso">16</span> 単位 (<span id="remainingKogakuKiso">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">情報基礎科目 残り:</span> <span id="resultJohoKiso">0</span> 単位
+                <span class="result-item">情報基礎科目:</span> <span id="acquiredJohoKiso">0</span> / <span id="targetJohoKiso">12</span> 単位 (<span id="remainingJohoKiso">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">情報応用科目 残り:</span> <span id="resultJohoOyo">0</span> 単位
+                <span class="result-item">情報応用科目:</span> <span id="acquiredJohoOyo">0</span> / <span id="targetJohoOyo">4</span> 単位 (<span id="remainingJohoOyo">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item"><span id="resultMajor1Label">第1メジャー科目</span> 残り:</span> <span id="resultMajor1">0</span> 単位
+                <span class="result-item"><span id="major1Label">第1メジャー科目</span>:</span> <span id="acquiredMajor1">0</span> / <span id="targetMajor1">28</span> 単位 (<span id="remainingMajor1">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item"><span id="resultMajor2Label">第2メジャー科目</span> 残り:</span> <span id="resultMajor2">0</span> 単位
+                <span class="result-item"><span id="major2Label">第2メジャー科目</span>:</span> <span id="acquiredMajor2">0</span> / <span id="targetMajor2">14</span> 単位 (<span id="remainingMajor2">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">その他メジャー科目 残り:</span> <span id="resultOtherMajor">0</span> 単位
+                <span class="result-item">その他メジャー科目:</span> <span id="acquiredOtherMajor">0</span> / <span id="targetOtherMajor">10</span> 単位 (<span id="remainingOtherMajor">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">卒業研究 残り:</span> <span id="resultSotsuken">0</span> 単位
+                <span class="result-item">卒業研究:</span> <span id="acquiredSotsuken">0</span> / <span id="targetSotsuken">8</span> 単位 (<span id="remainingSotsuken">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">自由選択科目 残り:</span> <span id="resultJiyuSentaku">0</span> 単位
+                <span class="result-item">自由選択科目:</span> <span id="acquiredJiyuSentaku">0</span> / <span id="targetJiyuSentaku">8</span> 単位 (<span id="remainingJiyuSentaku">0</span> 単位不足)
             </div>
         </div>
 
         <div class="total-summary">
             <h3>全体の単位状況</h3>
             <div>
-                <span class="result-item">全体の取得済み単位数:</span> <span id="resultTotalAcquired">0</span> 単位
+                <span class="result-item">全体の目標取得単位数:</span> <span id="totalTarget">0</span> 単位
             </div>
             <div>
-                <span class="result-item">全体の残りの単位数:</span> <span id="resultTotalRemaining">0</span> 単位
+                <span class="result-item">全体の現在取得済み単位数:</span> <span id="totalAcquired">0</span> 単位
+            </div>
+            <div>
+                <span class="result-item">全体の残り単位数:</span> <span id="totalRemaining">0</span> 単位
             </div>
         </div>
 
         <div class="chart-container">
             <h2>各科目の達成状況グラフ</h2>
-            <canvas id="tanikeisanChart"></canvas>
+            <canvas id="unitStatusChart"></canvas>
         </div>
 
         <div class="navigation">
-            <a href="tanisimulation.html">単位取得計画シミュレーションへ</a>
+            <a href="tanisimulation.html">シミュレーションへ</a>
         </div>
     </div>
 
@@ -290,90 +301,114 @@
             XD: { major1: 28, major2: 14 }
         };
 
-        let tanikeisanChart;
-        let allSubjects = [];
+        let unitStatusChart;
+        let allSubjects = []; // すべての科目データを格納する配列
+        let currentFilter = '月／Mon　1'; // 初期表示のフィルター (全角スペースに修正)
 
-        function calculateUnitsWithConversion(initialAcquiredUnits) {
-            const currentAcquired = { ...initialAcquiredUnits };
+        // 曜日と時限の定義 (データベース表記に合わせる)
+        const daysShort = ['月', '火', '水', '木', '金'];
+        const daysFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const periods = ['1', '2', '3', '4', '5', '6'];
+        const allTimeSlots = [];
 
-            const major1Overflow = Math.max(0, currentAcquired.major1 - targetUnits.major1);
+        // 月曜から金曜まで、1限から6限の順に追加 (全角スペースを使用)
+        daysShort.forEach((dayShort, index) => {
+            periods.forEach(period => {
+                allTimeSlots.push(`${dayShort}／${daysFull[index]}　${period}`);
+            });
+        });
+        allTimeSlots.push('他／Otr'); // 最後にその他の科目も追加
+
+        // 各科目の取得単位を計算する関数
+        function calculateAcquiredUnits(currentAcquired) {
+            const acquired = { ...currentAcquired }; // オブジェクトをコピーして変更
+
+            // 各カテゴリの超過単位を自由選択科目へ
+            const major1Overflow = Math.max(0, acquired.major1 - targetUnits.major1);
             if (major1Overflow > 0) {
-                currentAcquired.otherMajor += major1Overflow;
-                currentAcquired.major1 = targetUnits.major1;
+                acquired.otherMajor += major1Overflow; // 超過分はその他メジャーに加算
+                acquired.major1 = targetUnits.major1; // 目標単位数で上限設定
             }
 
-            const major2Overflow = Math.max(0, currentAcquired.major2 - targetUnits.major2);
+            const major2Overflow = Math.max(0, acquired.major2 - targetUnits.major2);
             if (major2Overflow > 0) {
-                currentAcquired.otherMajor += major2Overflow;
-                currentAcquired.major2 = targetUnits.major2;
+                acquired.otherMajor += major2Overflow; // 超過分はその他メジャーに加算
+                acquired.major2 = targetUnits.major2; // 目標単位数で上限設定
             }
 
-            const kyoyoOverflow = Math.max(0, currentAcquired.kyoyo - targetUnits.kyoyo);
+            // その他メジャーの超過分を自由選択に加算
+            const otherMajorToJiyuSentaku = Math.max(0, acquired.otherMajor - targetUnits.otherMajor);
+            if (otherMajorToJiyuSentaku > 0) {
+                acquired.jiyuSentaku += otherMajorToJiyuSentaku;
+                acquired.otherMajor = targetUnits.otherMajor; // 目標単位数で上限設定
+            }
+
+
+            const kyoyoOverflow = Math.max(0, acquired.kyoyo - targetUnits.kyoyo);
             if (kyoyoOverflow > 0) {
-                currentAcquired.jiyuSentaku += kyoyoOverflow;
-                currentAcquired.kyoyo = targetUnits.kyoyo;
+                acquired.jiyuSentaku += kyoyoOverflow;
+                acquired.kyoyo = targetUnits.kyoyo;
             }
 
-            const kogakuKisoOverflow = Math.max(0, currentAcquired.kogakuKiso - targetUnits.kogakuKiso);
+            const kogakuKisoOverflow = Math.max(0, acquired.kogakuKiso - targetUnits.kogakuKiso);
             if (kogakuKisoOverflow > 0) {
-                currentAcquired.jiyuSentaku += kogakuKisoOverflow;
-                currentAcquired.kogakuKiso = targetUnits.kogakuKiso;
+                acquired.jiyuSentaku += kogakuKisoOverflow;
+                acquired.kogakuKiso = targetUnits.kogakuKiso;
             }
 
-            const johoKisoOverflow = Math.max(0, currentAcquired.johoKiso - targetUnits.johoKiso);
+            const johoKisoOverflow = Math.max(0, acquired.johoKiso - targetUnits.johoKiso);
             if (johoKisoOverflow > 0) {
-                currentAcquired.jiyuSentaku += johoKisoOverflow;
-                currentAcquired.johoKiso = targetUnits.johoKiso;
+                acquired.jiyuSentaku += johoKisoOverflow;
+                acquired.johoKiso = targetUnits.johoKiso;
             }
 
-            const johoOyoOverflow = Math.max(0, currentAcquired.johoOyo - targetUnits.johoOyo);
+            const johoOyoOverflow = Math.max(0, acquired.johoOyo - targetUnits.johoOyo);
             if (johoOyoOverflow > 0) {
-                currentAcquired.jiyuSentaku += johoOyoOverflow;
-                currentAcquired.johoOyo = targetUnits.johoOyo;
+                acquired.jiyuSentaku += johoOyoOverflow;
+                acquired.johoOyo = targetUnits.johoOyo;
             }
 
-            const otherMajorOverflow = Math.max(0, currentAcquired.otherMajor - targetUnits.otherMajor);
-            if (otherMajorOverflow > 0) {
-                currentAcquired.jiyuSentaku += otherMajorOverflow;
-                currentAcquired.otherMajor = targetUnits.otherMajor;
-            }
 
-            const finalResults = {};
+            const results = {};
             let totalAcquiredForGraduation = 0;
             let totalRemainingSum = 0;
+            let totalTargetUnitsSum = 0;
 
             for (const category in targetUnits) {
                 if (targetUnits.hasOwnProperty(category)) {
-                    if (category !== 'jiyuSentaku') {
-                        const finalAcquiredForCategory = Math.min(currentAcquired[category], targetUnits[category]);
-                        finalResults[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
+                    // 各カテゴリの最終的な取得単位（目標値を超えないように）
+                    const finalAcquiredForCategory = Math.min(acquired[category], targetUnits[category]);
+                    
+                    // 各カテゴリの不足単位
+                    results[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
+                    
+                    if (category !== 'jiyuSentaku') { // 自由選択科目以外を合計に加算（目標まで）
                         totalAcquiredForGraduation += finalAcquiredForCategory;
                     }
+                    totalTargetUnitsSum += targetUnits[category];
                 }
             }
+            // 自由選択科目は、目標単位を考慮せず、取得した分をそのまま加算
+            results.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - acquired.jiyuSentaku); // ここは目標に対して不足している分
+            totalAcquiredForGraduation += acquired.jiyuSentaku; // 合計には取得した分全てを足す
 
-            finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku);
-            totalAcquiredForGraduation += currentAcquired.jiyuSentaku;
+            results.totalAcquired = totalAcquiredForGraduation; // 卒業に必要な合計単位
 
-            finalResults.totalAcquired = totalAcquiredForGraduation;
-
-            let recalculatedTotalRemaining = 0;
-            for (const category in finalResults) {
-                if (finalResults.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining') {
-                    recalculatedTotalRemaining += finalResults[category];
+            for (const category in results) {
+                if (results.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining' && category !== 'totalTargetUnits' && category !== 'actualAcquired') {
+                    totalRemainingSum += results[category];
                 }
             }
-            finalResults.totalRemaining = recalculatedTotalRemaining;
+            results.totalRemaining = totalRemainingSum;
 
-            finalResults.acquiredCategoryUnits = {};
-            for (const category in targetUnits) {
-                finalResults.acquiredCategoryUnits[category] = currentAcquired[category];
-            }
+            results.actualAcquired = acquired; // Overflow処理後の実際の取得単位
 
-            return finalResults;
+            results.totalTargetUnits = totalTargetUnitsSum;
+
+            return results;
         }
 
-        function updateMajorTargetsAndLabels() {
+        function updateDisplayMajorLabelsAndTargets() {
             const major1 = document.getElementById('major1Select').value;
             const major2 = document.getElementById('major2Select').value;
 
@@ -382,57 +417,116 @@
 
             document.getElementById('major1Label').textContent = `第1メジャー科目 (${major1})`;
             document.getElementById('major2Label').textContent = `第2メジャー科目 (${major2})`;
-            document.getElementById('resultMajor1Label').textContent = `第1メジャー科目 (${major1})`;
-            document.getElementById('resultMajor2Label').textContent = `第2メジャー科目 (${major2})`;
-
-            updateCalculations();
+            document.getElementById('manualMajor1Label').textContent = `第1メジャー科目 (${major1})`;
+            document.getElementById('manualMajor2Label').textContent = `第2メジャー科目 (${major2})`;
         }
+
 
         function updateCalculations() {
-            const acquiredUnits = {
-                kyoyo: parseInt(document.getElementById('kyoyoUnits').value) || 0,
-                kogakuKiso: parseInt(document.getElementById('kogakuKisoUnits').value) || 0,
-                johoKiso: parseInt(document.getElementById('johoKisoUnits').value) || 0,
-                johoOyo: parseInt(document.getElementById('johoOyoUnits').value) || 0,
-                major1: parseInt(document.getElementById('major1Units').value) || 0,
-                major2: parseInt(document.getElementById('major2Units').value) || 0,
-                otherMajor: parseInt(document.getElementById('otherMajorUnits').value) || 0,
-                sotsuken: parseInt(document.getElementById('sotsukenUnits').value) || 0,
-                jiyuSentaku: parseInt(document.getElementById('jiyuSentakuUnits').value) || 0
+            updateDisplayMajorLabelsAndTargets();
+
+            let acquiredUnits = {
+                kyoyo: 0, kogakuKiso: 0, johoKiso: 0, johoOyo: 0,
+                major1: 0, major2: 0, otherMajor: 0, sotsuken: 0, jiyuSentaku: 0
             };
 
-            const dataToSave = {
-                acquiredUnits: acquiredUnits,
-                selectedMajors: {
-                    major1: document.getElementById('major1Select').value,
-                    major2: document.getElementById('major2Select').value
-                },
-                checkedSubjects: getCheckedSubjectsState()
-            };
-            localStorage.setItem('tanikeisanData', JSON.stringify(dataToSave));
-            console.log('単位データとメジャー選択をローカルストレージに保存しました:', dataToSave);
+            const major1Selected = document.getElementById('major1Select').value;
+            const major2Selected = document.getElementById('major2Select').value;
+            const majorTags = ['IS', 'NC', 'XD']; // すべてのメジャー関連タグ
 
-            const results = calculateUnitsWithConversion(acquiredUnits);
+            // チェックボックスから取得単位を計算
+            // allSubjectsから、チェックボックスの状態を反映
+            allSubjects.forEach(subject => {
+                // 各科目IDに対して、どのタグがチェックされているかを確認
+                ['tag1', 'tag2', 'tag3'].forEach(tagKey => {
+                    const tagValue = subject[tagKey];
+                    if (tagValue) {
+                        const checkboxId = `chk-${subject.id}-${tagKey}`;
+                        const checkbox = document.getElementById(checkboxId);
+                        if (checkbox && checkbox.checked) {
+                            const units = parseInt(subject['単位数']) || 0;
+                            let category = tagToCategoryMap[tagValue];
 
-            document.getElementById('resultKyoyo').textContent = results.kyoyo;
-            document.getElementById('resultKogakuKiso').textContent = results.kogakuKiso;
-            document.getElementById('resultJohoKiso').textContent = results.johoKiso;
-            document.getElementById('resultJohoOyo').textContent = results.johoOyo;
-            document.getElementById('resultMajor1').textContent = results.major1;
-            document.getElementById('resultMajor2').textContent = results.major2;
-            document.getElementById('resultOtherMajor').textContent = results.otherMajor;
-            document.getElementById('resultSotsuken').textContent = results.sotsuken;
-            document.getElementById('resultJiyuSentaku').textContent = results.jiyuSentaku;
+                            if (majorTags.includes(tagValue)) {
+                                if (tagValue === major1Selected) {
+                                    category = 'major1';
+                                } else if (tagValue === major2Selected) {
+                                    category = 'major2';
+                                } else {
+                                    category = 'otherMajor';
+                                }
+                            }
+                            if (acquiredUnits.hasOwnProperty(category)) {
+                                acquiredUnits[category] += units;
+                            } else {
+                                console.warn(`不明なカテゴリ: ${category} (タグ: ${tagValue})`);
+                            }
+                        }
+                    }
+                });
+            });
 
-            document.getElementById('resultTotalAcquired').textContent = results.totalAcquired;
-            document.getElementById('resultTotalRemaining').textContent = results.totalRemaining;
 
-            updateTanikeisanChart(results.acquiredCategoryUnits);
+            // 手動入力された単位を加算
+            acquiredUnits.kyoyo += parseInt(document.getElementById('manualKyoyoUnits').value) || 0;
+            acquiredUnits.kogakuKiso += parseInt(document.getElementById('manualKogakuKisoUnits').value) || 0;
+            acquiredUnits.johoKiso += parseInt(document.getElementById('manualJohoKisoUnits').value) || 0;
+            acquiredUnits.johoOyo += parseInt(document.getElementById('manualJohoOyoUnits').value) || 0;
+            acquiredUnits.major1 += parseInt(document.getElementById('manualMajor1Units').value) || 0;
+            acquiredUnits.major2 += parseInt(document.getElementById('manualMajor2Units').value) || 0;
+            acquiredUnits.otherMajor += parseInt(document.getElementById('manualOtherMajorUnits').value) || 0;
+            acquiredUnits.sotsuken += parseInt(document.getElementById('manualSotsukenUnits').value) || 0;
+            acquiredUnits.jiyuSentaku += parseInt(document.getElementById('manualJiyuSentakuUnits').value) || 0;
+
+            const results = calculateAcquiredUnits(acquiredUnits);
+
+            // 結果を表示
+            document.getElementById('acquiredKyoyo').textContent = Math.min(results.actualAcquired.kyoyo, targetUnits.kyoyo);
+            document.getElementById('remainingKyoyo').textContent = results.kyoyo;
+            document.getElementById('targetKyoyo').textContent = targetUnits.kyoyo;
+
+            document.getElementById('acquiredKogakuKiso').textContent = Math.min(results.actualAcquired.kogakuKiso, targetUnits.kogakuKiso);
+            document.getElementById('remainingKogakuKiso').textContent = results.kogakuKiso;
+            document.getElementById('targetKogakuKiso').textContent = targetUnits.kogakuKiso;
+
+            document.getElementById('acquiredJohoKiso').textContent = Math.min(results.actualAcquired.johoKiso, targetUnits.johoKiso);
+            document.getElementById('remainingJohoKiso').textContent = results.johoKiso;
+            document.getElementById('targetJohoKiso').textContent = targetUnits.johoKiso;
+
+            document.getElementById('acquiredJohoOyo').textContent = Math.min(results.actualAcquired.johoOyo, targetUnits.johoOyo);
+            document.getElementById('remainingJohoOyo').textContent = results.johoOyo;
+            document.getElementById('targetJohoOyo').textContent = targetUnits.johoOyo;
+
+            document.getElementById('acquiredMajor1').textContent = Math.min(results.actualAcquired.major1, targetUnits.major1);
+            document.getElementById('remainingMajor1').textContent = results.major1;
+            document.getElementById('targetMajor1').textContent = targetUnits.major1;
+
+            document.getElementById('acquiredMajor2').textContent = Math.min(results.actualAcquired.major2, targetUnits.major2);
+            document.getElementById('remainingMajor2').textContent = results.major2;
+            document.getElementById('targetMajor2').textContent = targetUnits.major2;
+
+            document.getElementById('acquiredOtherMajor').textContent = Math.min(results.actualAcquired.otherMajor, targetUnits.otherMajor);
+            document.getElementById('remainingOtherMajor').textContent = results.otherMajor;
+            document.getElementById('targetOtherMajor').textContent = targetUnits.otherMajor;
+
+            document.getElementById('acquiredSotsuken').textContent = Math.min(results.actualAcquired.sotsuken, targetUnits.sotsuken);
+            document.getElementById('remainingSotsuken').textContent = results.sotsuken;
+            document.getElementById('targetSotsuken').textContent = targetUnits.sotsuken;
+
+            document.getElementById('acquiredJiyuSentaku').textContent = Math.min(results.actualAcquired.jiyuSentaku, targetUnits.jiyuSentaku);
+            document.getElementById('remainingJiyuSentaku').textContent = results.jiyuSentaku;
+            document.getElementById('targetJiyuSentaku').textContent = targetUnits.jiyuSentaku;
+
+            document.getElementById('totalTarget').textContent = results.totalTargetUnits;
+            document.getElementById('totalAcquired').textContent = results.totalAcquired;
+            document.getElementById('totalRemaining').textContent = results.totalRemaining;
+
+            updateChart(results.actualAcquired);
+            saveDataToLocalStorage(acquiredUnits);
         }
 
-        function updateTanikeisanChart(acquiredDataRaw) {
-            const ctx = document.getElementById('tanikeisanChart').getContext('2d');
-            
+        function updateChart(data) {
+            const ctx = document.getElementById('unitStatusChart').getContext('2d');
             const labels = Object.keys(targetUnits).map(key => {
                 switch(key) {
                     case 'kyoyo': return '教養教育科目';
@@ -448,19 +542,19 @@
                 }
             });
             
-            const acquiredDataForChart = Object.keys(targetUnits).map(key => {
-                return Math.min(acquiredDataRaw[key], targetUnits[key]);
+            const acquiredData = Object.keys(targetUnits).map(key => {
+                return Math.min(data[key], targetUnits[key]);
             });
 
             const targetData = Object.keys(targetUnits).map(key => {
                 return targetUnits[key];
             });
 
-            if (tanikeisanChart) {
-                tanikeisanChart.destroy();
+            if (unitStatusChart) {
+                unitStatusChart.destroy();
             }
 
-            tanikeisanChart = new Chart(ctx, {
+            unitStatusChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -471,8 +565,8 @@
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
                     }, {
-                        label: '現在の取得済み単位数',
-                        data: acquiredDataForChart,
+                        label: '取得単位数',
+                        data: acquiredData,
                         backgroundColor: 'rgba(75, 192, 192, 0.8)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
@@ -524,73 +618,212 @@
             });
         }
 
+        // 同じ科目の他のタグのチェックボックスをオフにする関数
+        function handleCheckboxChange(changedCheckbox) {
+            if (changedCheckbox.checked) {
+                const subjectId = changedCheckbox.dataset.subjectId;
+                document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`).forEach(checkbox => {
+                    if (checkbox !== changedCheckbox) {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+            updateCalculations(); // ★重要: チェックボックスの変更時に計算を更新
+        }
+
         // 科目データをFirebaseから読み込み、表示する関数
         function loadSubjects() {
-            const subjectsRef = database.ref('syllabus_subjects'); 
+            const subjectsRef = database.ref('syllabus_subjects');
             subjectsRef.on('value', (snapshot) => {
                 const subjectsData = snapshot.val();
-                const subjectListDiv = document.getElementById('subjectList');
-                subjectListDiv.innerHTML = '';
-                allSubjects = [];
+                allSubjects = []; // データをクリアして再設定
 
                 if (subjectsData) {
                     allSubjects = Object.keys(subjectsData).map(key => ({
-                        id: key, 
+                        id: key,
                         ...subjectsData[key]
                     }));
-
-                    allSubjects.forEach(subject => {
-                        console.log("科目データ (tanikeisan.html):", subject); // デバッグ用にログ出力
-
-                        const itemDiv = document.createElement('div');
-                        itemDiv.classList.add('subject-item');
-                        itemDiv.dataset.subjectId = subject.id;
-
-                        const checkboxIdPrefix = 'chk'; // tanikeisan.html 用のプレフィックス
-
-                        // 最初のカラムにすべてのチェックボックスをまとめる
-                        let checkboxesInFirstColumn = '';
-                        if (subject.tag1) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)">`;
-                        }
-                        if (subject.tag2) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)">`;
-                        }
-                        if (subject.tag3) {
-                            checkboxesInFirstColumn += `<input type="checkbox" id="${checkboxIdPrefix}-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject.units}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)">`;
-                        }
-
-                        itemDiv.innerHTML = `
-                            <div>${checkboxesInFirstColumn}</div> <div>${subject.tag1 || ''}</div>     <div>${subject.tag2 || ''}</div>     <div>${subject.tag3 || ''}</div>     <div>${subject.tag4 || ''}</div>     <div>${subject.name || ''}</div>     <div class="units">${subject.units || 0}</div> `;
-                        subjectListDiv.appendChild(itemDiv);
-                    });
                 } else {
-                    subjectListDiv.innerHTML = '<p>科目データがありません。</p>';
+                    console.warn('科目データがありません。');
                 }
-                restoreCheckedSubjectsState();
+                restoreSavedState(); // フィルター、手動入力、チェックボックスの状態を復元
+                displaySubjectsByFilter(currentFilter); // 読み込み後、現在のフィルターで表示
             }, (error) => {
                 console.error("Firebaseから科目データの読み込みに失敗しました:", error);
                 alert("科目データの読み込みに失敗しました。インターネット接続を確認してください。");
             });
         }
 
-        function getCheckedSubjectsState() {
-            const checkedStates = {};
-            document.querySelectorAll('#subjectList input[type="checkbox"]').forEach(checkbox => {
-                if (checkbox.checked) {
-                    checkedStates[checkbox.id] = true;
+        // 選択された曜限の科目を表示する関数
+        function displaySubjectsByFilter(filter) {
+            currentFilter = filter;
+            const subjectListDiv = document.getElementById('subjectList');
+            subjectListDiv.innerHTML = ''; // リストをクリア
+
+            // アクティブなボタンを更新
+            document.querySelectorAll('.timetable-tabs button').forEach(button => {
+                if (button.dataset.filter === filter) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
                 }
             });
-            return checkedStates;
+
+            let filteredSubjects = [];
+
+            if (filter === '他／Otr') {
+                const standardTimeSlots = allTimeSlots.slice(0, -1); // '他／Otr'を除く標準的な曜限
+
+                filteredSubjects = allSubjects.filter(subject => {
+                    const yougen = subject['曜限'];
+                    if (!yougen) return true; // 曜限が未定義・null・空の場合も「その他」に含める
+                    
+                    if (Array.isArray(yougen)) {
+                        // 曜限配列に'他／Otr'が含まれている、または
+                        // 曜限配列に標準的な時間割が一つも含まれていない
+                        const containsOtr = yougen.includes('他／Otr');
+                        const containsAnyStandardSlot = yougen.some(y => standardTimeSlots.includes(y));
+                        return containsOtr || (!containsAnyStandardSlot && yougen.length > 0);
+                    } else if (typeof yougen === 'string') {
+                        // 曜限が'他／Otr'である、または
+                        // 曜限が標準的な時間割に含まれない
+                        return yougen === '他／Otr' || !standardTimeSlots.includes(yougen);
+                    }
+                    return false; // その他不明な形式はフィルタリングしない
+                });
+                
+                // 他の曜限で既に表示されている科目の重複排除は、
+                // 他／Otrが選択された場合のみ行います。
+                // ただし、今回は各ボタンで厳密にその曜限の科目のみを表示するため、
+                // ここで重複排除の複雑なロジックは不要です。
+                // 「他／Otr」タブでは、他のどの曜限にも割り当てられていない科目を表示するというシンプルなロジックで対応します。
+
+            } else {
+                // 通常の曜限フィルター
+                filteredSubjects = allSubjects.filter(subject => {
+                    const yougen = subject['曜限'];
+                    if (Array.isArray(yougen)) {
+                        return yougen.includes(filter);
+                    } else if (typeof yougen === 'string') {
+                        return yougen === filter;
+                    }
+                    return false;
+                });
+            }
+
+            filteredSubjects.forEach(subject => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('subject-item');
+                itemDiv.dataset.subjectId = subject.id;
+
+                const tag1Content = subject.tag1 ? `<div>${subject.tag1}</div><div><input type="checkbox" id="chk-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)"></div>` : `<div></div><div></div>`;
+                const tag2Content = subject.tag2 ? `<div>${subject.tag2}</div><div><input type="checkbox" id="chk-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)"></div>` : `<div></div><div></div>`;
+                const tag3Content = subject.tag3 ? `<div>${subject.tag3}</div><div><input type="checkbox" id="chk-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)"></div>` : `<div></div><div></div>`;
+                
+                itemDiv.innerHTML = `
+                    ${tag1Content}
+                    ${tag2Content}
+                    ${tag3Content}
+                    <div>${subject.tag4 || ''}</div> 
+                    <div>${subject['科目名'] || ''}</div> 
+                    <div class="units">${subject['単位数'] || 0}</div> 
+                `;
+                subjectListDiv.appendChild(itemDiv);
+            });
+
+            // 復元されたチェックボックスの状態を適用
+            restoreCheckboxStates();
         }
 
-        function restoreCheckedSubjectsState() {
+        // 時間割タブを生成する関数
+        function createTimetableTabs() {
+            const timetableTabsDiv = document.getElementById('timetableTabs');
+            timetableTabsDiv.innerHTML = ''; // クリア
+
+            allTimeSlots.forEach(slot => {
+                const button = document.createElement('button');
+                // データベース表記の "月／Mon　1" を "月/Mon 1" のように表示
+                // ここで全角スペースを半角スペースに変換して表示
+                button.textContent = slot.replace('／', '/').replace('Mon', '月').replace('Tue', '火').replace('Wed', '水').replace('Thu', '木').replace('Fri', '金').replace('Otr', 'その他').replace('　', ' '); 
+                button.dataset.filter = slot;
+                button.onclick = () => displaySubjectsByFilter(slot);
+                timetableTabsDiv.appendChild(button);
+            });
+        }
+
+
+        // データをローカルストレージに保存する関数
+        function saveDataToLocalStorage(acquiredUnits) {
+            const checkedSubjects = {};
+            // すべてのチェックボックスの状態を保存
+            document.querySelectorAll('input[type="checkbox"][id^="chk-"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedSubjects[checkbox.id] = true;
+                }
+            });
+
+            const dataToSave = {
+                major1: document.getElementById('major1Select').value,
+                major2: document.getElementById('major2Select').value,
+                manualUnits: {
+                    kyoyo: parseInt(document.getElementById('manualKyoyoUnits').value) || 0,
+                    kogakuKiso: parseInt(document.getElementById('manualKogakuKisoUnits').value) || 0,
+                    johoKiso: parseInt(document.getElementById('manualJohoKisoUnits').value) || 0,
+                    johoOyo: parseInt(document.getElementById('manualJohoOyoUnits').value) || 0,
+                    major1: parseInt(document.getElementById('manualMajor1Units').value) || 0,
+                    major2: parseInt(document.getElementById('manualMajor2Units').value) || 0,
+                    otherMajor: parseInt(document.getElementById('manualOtherMajorUnits').value) || 0,
+                    sotsuken: parseInt(document.getElementById('manualSotsukenUnits').value) || 0,
+                    jiyuSentaku: parseInt(document.getElementById('manualJiyuSentakuUnits').value) || 0
+                },
+                checkedSubjects: checkedSubjects,
+                acquiredUnits: acquiredUnits, 
+                selectedMajors: {
+                    major1: document.getElementById('major1Select').value,
+                    major2: document.getElementById('major2Select').value
+                },
+                currentFilter: currentFilter // 現在のフィルター状態を保存
+            };
+            localStorage.setItem('tanikeisanData', JSON.stringify(dataToSave));
+            console.log('データをローカルストレージに保存しました:', dataToSave);
+        }
+
+        // ローカルストレージからデータを復元する関数
+        function restoreSavedState() {
+            const savedData = localStorage.getItem('tanikeisanData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                
+                document.getElementById('major1Select').value = parsedData.major1 || 'IS';
+                document.getElementById('major2Select').value = parsedData.major2 || 'IS';
+
+                if (parsedData.manualUnits) {
+                    document.getElementById('manualKyoyoUnits').value = parsedData.manualUnits.kyoyo || 0;
+                    document.getElementById('manualKogakuKisoUnits').value = parsedData.manualUnits.kogakuKiso || 0;
+                    document.getElementById('manualJohoKisoUnits').value = parsedData.manualUnits.johoKiso || 0;
+                    document.getElementById('manualJohoOyoUnits').value = parsedData.manualUnits.johoOyo || 0;
+                    document.getElementById('manualMajor1Units').value = parsedData.manualUnits.major1 || 0;
+                    document.getElementById('manualMajor2Units').value = parsedData.manualUnits.major2 || 0;
+                    document.getElementById('manualOtherMajorUnits').value = parsedData.manualUnits.otherMajor || 0;
+                    document.getElementById('manualSotsukenUnits').value = parsedData.manualUnits.sotsuken || 0;
+                    document.getElementById('manualJiyuSentakuUnits').value = parsedData.manualUnits.jiyuSentaku || 0;
+                }
+                currentFilter = parsedData.currentFilter || '月／Mon　1'; // フィルター状態を復元 (全角スペースに修正)
+
+            }
+            // 科目表示はloadSubjectsのコールバック内で行うため、ここでは行わない
+        }
+
+        // チェックボックスの状態をローカルストレージから復元する関数
+        function restoreCheckboxStates() {
             const savedData = localStorage.getItem('tanikeisanData');
             if (savedData) {
                 const parsedData = JSON.parse(savedData);
                 const checkedSubjects = parsedData.checkedSubjects || {};
-                
-                document.querySelectorAll('#subjectList input[type="checkbox"]').forEach(checkbox => {
+
+                // 全ての科目についてチェックボックスの状態を復元
+                // (表示されているものだけでなく、DOMに存在する全てのチェックボックスに対して適用)
+                document.querySelectorAll('input[type="checkbox"][id^="chk-"]').forEach(checkbox => {
                     if (checkedSubjects[checkbox.id]) {
                         checkbox.checked = true;
                     } else {
@@ -598,107 +831,16 @@
                     }
                 });
             }
+            updateCalculations(); // 復元後に計算を更新
         }
 
-        function handleCheckboxChange(changedCheckbox) {
-            const subjectId = changedCheckbox.dataset.subjectId;
-            const checkboxesForSubject = document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`);
 
-            if (changedCheckbox.checked) {
-                checkboxesForSubject.forEach(cb => {
-                    if (cb !== changedCheckbox) {
-                        cb.checked = false;
-                    }
-                });
-            }
-            // チェックボックスの状態が変更されたら、自動的に再計算する
-            applyCheckedSubjects(); 
-        }
+        // 初期ロード時の処理
+        document.addEventListener('DOMContentLoaded', () => {
+            createTimetableTabs(); // 時間割タブの生成
+            loadSubjects(); // 科目リストの読み込みと表示（restoreSavedStateとdisplaySubjectsByFilterはこれに含まれる）
+        });
 
-        function applyCheckedSubjects() {
-            let tempAcquiredUnits = {
-                kyoyo: 0, kogakuKiso: 0, johoKiso: 0, johoOyo: 0,
-                major1: 0, major2: 0, otherMajor: 0, sotsuken: 0, jiyuSentaku: 0
-            };
-
-            const major1Selected = document.getElementById('major1Select').value;
-            const major2Selected = document.getElementById('major2Select').value;
-            const majorTags = ['IS', 'NC', 'XD']; // すべてのメジャー関連タグ
-
-            document.querySelectorAll('#subjectList input[type="checkbox"]:checked').forEach(checkbox => {
-                const tag = checkbox.dataset.tag;
-                const units = parseInt(checkbox.dataset.units) || 0; // ここで単位数を数値として取得
-
-                let category = tagToCategoryMap[tag]; // まずは既存のマップで確認
-
-                // メジャー関連のタグの場合の特殊処理
-                if (majorTags.includes(tag)) {
-                    if (tag === major1Selected) {
-                        category = 'major1';
-                    } else if (tag === major2Selected) {
-                        category = 'major2';
-                    } else {
-                        // 選択されなかったメジャー科目は「その他メジャー科目」として扱う
-                        category = 'otherMajor';
-                    }
-                }
-
-                if (tempAcquiredUnits.hasOwnProperty(category)) {
-                    tempAcquiredUnits[category] += units;
-                } else {
-                    console.warn(`不明なカテゴリ: ${category} (タグ: ${tag})`);
-                }
-            });
-
-            document.getElementById('kyoyoUnits').value = tempAcquiredUnits.kyoyo;
-            document.getElementById('kogakuKisoUnits').value = tempAcquiredUnits.kogakuKiso;
-            document.getElementById('johoKisoUnits').value = tempAcquiredUnits.johoKiso;
-            document.getElementById('johoOyoUnits').value = tempAcquiredUnits.johoOyo;
-            document.getElementById('major1Units').value = tempAcquiredUnits.major1;
-            document.getElementById('major2Units').value = tempAcquiredUnits.major2;
-            document.getElementById('otherMajorUnits').value = tempAcquiredUnits.otherMajor;
-            document.getElementById('sotsukenUnits').value = tempAcquiredUnits.sotsuken;
-            document.getElementById('jiyuSentakuUnits').value = tempAcquiredUnits.jiyuSentaku;
-
-            updateCalculations();
-        }
-
-        window.onload = function() {
-            const savedData = localStorage.getItem('tanikeisanData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                const acquiredUnits = parsedData.acquiredUnits;
-                const selectedMajors = parsedData.selectedMajors;
-
-                console.log('ローカルストレージから単位データとメジャー選択を読み込みました:', parsedData);
-                
-                // 手動入力フィールドに値を復元
-                document.getElementById('kyoyoUnits').value = acquiredUnits.kyoyo || 0;
-                document.getElementById('kogakuKisoUnits').value = acquiredUnits.kogakuKiso || 0;
-                document.getElementById('johoKisoUnits').value = acquiredUnits.johoKiso || 0;
-                document.getElementById('johoOyoUnits').value = acquiredUnits.johoOyo || 0;
-                document.getElementById('major1Units').value = acquiredUnits.major1 || 0;
-                document.getElementById('major2Units').value = acquiredUnits.major2 || 0;
-                document.getElementById('otherMajorUnits').value = acquiredUnits.otherMajor || 0;
-                document.getElementById('sotsukenUnits').value = acquiredUnits.sotsuken || 0;
-                document.getElementById('jiyuSentakuUnits').value = acquiredUnits.jiyuSentaku || 0;
-
-                // メジャー選択を復元
-                document.getElementById('major1Select').value = selectedMajors.major1 || 'IS';
-                document.getElementById('major2Select').value = selectedMajors.major2 || 'IS';
-
-            } else {
-                console.warn('ローカルストレージに単位データが見つかりませんでした。初期値を使用します。');
-                document.getElementById('major1Select').value = 'IS';
-                document.getElementById('major2Select').value = 'IS';
-            }
-
-            document.getElementById('major1Select').addEventListener('change', updateMajorTargetsAndLabels);
-            document.getElementById('major2Select').addEventListener('change', updateMajorTargetsAndLabels);
-            
-            loadSubjects(); // 科目リストを読み込み
-            updateMajorTargetsAndLabels(); // メジャーターゲットを更新し、初回の計算を実行
-        };
     </script>
 </body>
 </html>

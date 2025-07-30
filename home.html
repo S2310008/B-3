@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <div class="header">
+        <div class="fusen-2">
+            <span class="home-text">ホーム</span>
+        </div>
+        <div class="date" id="current-date"></div>
+    </div>
+
+
+    <div class="container">
+        <a href="tanikeisan.html" class="card">
+            <div class="card-content">単位取得内訳</div>
+        </a>
+        <a href="index.html" class="card">
+            <div class="card-content">科目検索<br>（曜日・科目名から）</div>
+        </a>
+        <a href="course_search_by_curriculum.html" class="card">
+            <div class="card-content">科目検索<br>（カリキュラムから）<br>※情報学領域のみ</div>
+        </a>
+        <a href="schedule_simulation.html" class="card">
+            <div class="card-content">予定と<br>シミュレーション</div>
+        </a>
+    </div>
+    <script>
+        // JavaScriptで今日の日付を取得して表示する
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0'); // 月は0から始まるため+1
+            const day = today.getDate().toString().padStart(2, '0');
+
+            dateElement.textContent = `${year}/${month}/${day}`;
+        });
+    </script>
+</body>
+</html>

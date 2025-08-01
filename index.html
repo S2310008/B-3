@@ -14,7 +14,13 @@
         <div class="fusen-2">
             <span class="home-text">カリキュラム検索</span>
         </div>
-        <div class="date" id="current-date"></div>
+
+        <div class="header-right">
+            <div class="date" id="current-date"></div>
+            <button class="menu-button" aria-label="メニューを開く">
+                <img src="image/ハンバーガーメニュー.svg" alt="メニューアイコン">
+            </button>
+        </div>
     </div>
 
     <div class="search-container">
@@ -26,13 +32,13 @@
         <div id="time-search-panel">
             <div class="search-input-group">
                 <select id="select-period-filter">
-                    <option value="全て">開講期間 (全て)</option>
+                    <option value="全て">開講期間</option>
                     <option value="前期">前期</option>
                     <option value="後期">後期</option>
                     <option value="通年">通年</option>
                 </select>
                 <select id="select-day-filter">
-                    <option value="全て">曜日 (全て)</option>
+                    <option value="全て">曜日</option>
                     <option value="月">月曜日</option>
                     <option value="火">火曜日</option>
                     <option value="水">水曜日</option>
@@ -40,7 +46,7 @@
                     <option value="金">金曜日</option>
                 </select>
                 <select id="select-time-filter">
-                    <option value="全て">時間 (全て)</option>
+                    <option value="全て">時間</option>
                     <option value="1">1時限</option>
                     <option value="2">2時限</option>
                     <option value="3">3時限</option>
@@ -48,14 +54,12 @@
                     <option value="5">5時限</option>
                     <option value="6">6時限</option>
                 </select>
-                <button id="search-button">🔍検索</button>
             </div>
         </div>
 
         <div id="name-search-panel" style="display: none;">
             <div class="search-input-group">
                 <input type="text" id="subject-name-input" placeholder="科目名を入力">
-                <button id="name-search-button">🔍検索</button>
             </div>
         </div>
     </div>
@@ -92,9 +96,7 @@
         const selectPeriodFilter = document.getElementById('select-period-filter');
         const selectDayFilter = document.getElementById('select-day-filter');
         const selectTimeFilter = document.getElementById('select-time-filter');
-        const searchButton = document.getElementById('search-button');
         const subjectNameInput = document.getElementById('subject-name-input');
-        const nameSearchButton = document.getElementById('name-search-button');
         let allSubjectsData = {};
         function mapOfferingDivision(division) {
             if (!division) return '不明';
@@ -209,14 +211,10 @@
             timeSearchPanel.style.display = 'none';
             applyCurrentSearchFilter();
         });
-        searchButton.addEventListener('click', applyCurrentSearchFilter);
-        nameSearchButton.addEventListener('click', applyCurrentSearchFilter);
         selectPeriodFilter.addEventListener('change', applyCurrentSearchFilter);
         selectDayFilter.addEventListener('change', applyCurrentSearchFilter);
         selectTimeFilter.addEventListener('change', applyCurrentSearchFilter);
-        subjectNameInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') applyCurrentSearchFilter();
-        });
+        subjectNameInput.addEventListener('keyup', applyCurrentSearchFilter);
         fetchSubjects();
     </script>
 

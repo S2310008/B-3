@@ -4,164 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>和歌山大学 カリキュラム検索</title>
-    <style>
-        /* 基本スタイル */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            font-size: 2.2em;
-        }
-
-        /* 検索バーコンテナ */
-        .search-container {
-            max-width: 800px; /* 少し広げてUIを収める */
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .search-tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .search-tab-button {
-            flex-grow: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border: none;
-            background-color: transparent;
-            font-size: 1.1em;
-            color: #666;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .search-tab-button.active {
-            color: #007bff;
-            border-bottom-color: #007bff;
-            font-weight: bold;
-        }
-
-        /* 検索入力フォーム */
-        .search-input-group {
-            display: flex;
-            flex-wrap: wrap; /* 小さい画面で折り返す */
-            gap: 10px; /* 要素間の隙間 */
-            align-items: center;
-            padding: 10px 0;
-        }
-        .search-input-group input,
-        .search-input-group select {
-            border: 1px solid #ced4da; /* 枠線を追加 */
-            border-radius: 5px;
-            padding: 10px 15px;
-            font-size: 1em;
-            flex-grow: 1;
-            outline: none;
-            min-width: 120px; /* 最小幅 */
-        }
-        .search-input-group select {
-            background-color: white;
-            cursor: pointer;
-            appearance: none; /* デフォルトの矢印を消す */
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%20197.8L145.2%2048.7%203.2%20197.8c-4.6%204.6-12%204.6-16.6%200l-16.6-16.6c-4.6-4.6-4.6-12%200-16.6l155.4-155.4c4.6-4.6%2012-4.6%2016.6%200l155.4%20155.4c4.6%204.6%204.6%2012%200%2016.6l-16.6%2016.6c-4.6%204.7-12%204.7-16.6.1z%22%2F%3E%3C%2Fsvg%3E'); /* カスタム矢印の色を合わせる */
-            background-repeat: no-repeat;
-            background-position: right 0.7em top 50%;
-            background-size: 0.65em auto;
-            padding-right: 2.5em; /* 矢印との隙間 */
-        }
-        .search-input-group button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: background-color 0.3s ease;
-            white-space: nowrap; /* ボタン内のテキストの折り返し防止 */
-        }
-        .search-input-group button:hover {
-            background-color: #0056b3;
-        }
-
-        /* 検索結果リスト */
-        .search-results-list {
-            list-style: none;
-            padding: 0;
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .search-results-list li {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .search-results-list li:last-child {
-            border-bottom: none;
-        }
-        .search-results-list li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            display: block;
-        }
-        .search-results-list li a:hover {
-            color: #007bff;
-        }
-        .search-results-list li .result-details {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* メッセージ表示 */
-        .loading-message, .error-message, .no-results-message {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.1em;
-            color: #6c757d;
-        }
-        .error-message {
-            color: #dc3545;
-        }
-
-        /* タグスタイル */
-        .subject-tag {
-            background-color: #f0f0f0;
-            color: #555;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75em;
-            margin-right: 5px;
-            display: inline-block;
-            white-space: nowrap;
-            border: 1px solid #ddd;
-            margin-top: 5px;
-        }
-        .tag-special-4 { background-color: #f3e5f5; color: #8e24aa; border-color: #e1bee7; }
-
-    </style>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>和歌山大学 カリキュラム検索</h1>
+    <div class="header">
+        <div class="fusen-2">
+            <span class="home-text">カリキュラム検索</span>
+        </div>
+        <div class="date" id="current-date"></div>
+    </div>
 
     <div class="search-container">
         <div class="search-tabs">
@@ -192,7 +46,8 @@
                     <option value="3">3時限</option>
                     <option value="4">4時限</option>
                     <option value="5">5時限</option>
-                    <option value="6">6時限</option> </select>
+                    <option value="6">6時限</option>
+                </select>
                 <button id="search-button">🔍検索</button>
             </div>
         </div>
@@ -214,164 +69,91 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-        // Firebaseの設定
+        // (中略) Firebaseと検索機能のロジックは変更なし
         const firebaseConfig = {
             apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU",
             authDomain: "b3app-b0c29.firebaseapp.com",
             databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com",
             projectId: "b3app-b0c29",
-            storageBucket: "b3app-b0c29.firebasestorage.app",
+            storageBucket: "b3app-b0c29.appspot.com",
             messagingSenderId: "1000910332829",
             appId: "1:1000910332829:web:a1bc233e638afed9b90574"
         };
-
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-
         const loadingElement = document.getElementById('loading');
         const errorElement = document.getElementById('error');
         const searchResultsList = document.getElementById('search-results');
         const noResultsElement = document.getElementById('no-results');
-
-        // UI要素の取得
         const timeSearchTab = document.getElementById('time-search-tab');
         const nameSearchTab = document.getElementById('name-search-tab');
         const timeSearchPanel = document.getElementById('time-search-panel');
         const nameSearchPanel = document.getElementById('name-search-panel');
-
         const selectPeriodFilter = document.getElementById('select-period-filter');
         const selectDayFilter = document.getElementById('select-day-filter');
         const selectTimeFilter = document.getElementById('select-time-filter');
         const searchButton = document.getElementById('search-button');
-
         const subjectNameInput = document.getElementById('subject-name-input');
         const nameSearchButton = document.getElementById('name-search-button');
-
         let allSubjectsData = {};
-
-        /**
-         * 開講区分（クォーター等）を前期/後期/通年にマッピングする
-         */
         function mapOfferingDivision(division) {
             if (!division) return '不明';
-            if (division.includes('第1クォーター') || division.includes('第2クォーター') || division.includes('前期')) {
-                return '前期';
-            }
-            if (division.includes('第3クォーター') || division.includes('第4クォーター') || division.includes('後期')) {
-                return '後期';
-            }
-            if (division.includes('通年')) {
-                return '通年';
-            }
+            if (division.includes('第1クォーター') || division.includes('第2クォーター') || division.includes('前期')) return '前期';
+            if (division.includes('第3クォーター') || division.includes('第4クォーター') || division.includes('後期')) return '後期';
+            if (division.includes('通年')) return '通年';
             return 'その他';
         }
-
-        /**
-         * 検索結果を表示する
-         */
         function displayResults(subjectsToDisplay) {
             searchResultsList.innerHTML = '';
             noResultsElement.style.display = 'none';
-
             if (Object.keys(subjectsToDisplay).length === 0) {
                 noResultsElement.style.display = 'block';
                 return;
             }
-
             for (const subjectCode in subjectsToDisplay) {
                 const subject = subjectsToDisplay[subjectCode];
                 const listItem = document.createElement('li');
-
                 let tagsHtml = '';
-                const tagSpans = [];//表示するタグのHTMLを保存する配列
-                if (subject.tag4) {
-                    tagSpans.push(`<span class="subject-tag tag-special-4">${subject.tag4}</span>`);
-                }
-                // tag1が存在する場合
-                if (subject.tag1) {
-                    tagSpans.push(`<span class="subject-tag">${subject.tag1}</span>`);
-                }
-                // tag2が存在する場合
-                if (subject.tag2) {
-                    tagSpans.push(`<span class="subject-tag">${subject.tag2}</span>`);
-                }
-                // tag3が存在する場合
-                if (subject.tag3) {
-                    tagSpans.push(`<span class="subject-tag">${subject.tag3}</span>`);
-                }
-
-                //HTMLの組み立て
-                if (tagSpans.length > 0) {
-                    tagsHtml = `<div style="margin-top:5px;">
-                                    ${tagSpans.join(' ')}
-                                </div>`;
-                }
-                
+                const tagSpans = [];
+                if (subject.tag4) tagSpans.push(`<span class="subject-tag tag-special-4">${subject.tag4}</span>`);
+                if (subject.tag1) tagSpans.push(`<span class="subject-tag">${subject.tag1}</span>`);
+                if (subject.tag2) tagSpans.push(`<span class="subject-tag">${subject.tag2}</span>`);
+                if (subject.tag3) tagSpans.push(`<span class="subject-tag">${subject.tag3}</span>`);
+                if (tagSpans.length > 0) tagsHtml = `<div style="margin-top:5px;">${tagSpans.join(' ')}</div>`;
                 const term = subject['開講区分'] ? subject['開講区分'].split('／')[0] : '開講区分不明';
-
-                listItem.innerHTML = `
-                    <a href="detail.html?code=${encodeURIComponent(subjectCode)}" target="_blank">
-                        ${subject['科目名'] ?? '不明な科目'}
-                        <div class="result-details">
-                            ${subject['教員名'] ?? '教員不明'} |
-                            ${subject['曜限'] ?? '曜限不明'} | 
-                            ${term} | 
-                            ${subject['単位数'] ?? '?'}単位
-                            ${tagsHtml}
-                        </div>
-                    </a>
-                `;
+                listItem.innerHTML = `<a href="detail.html?code=${encodeURIComponent(subjectCode)}" target="_blank">${subject['科目名'] ?? '不明な科目'}<div class="result-details">${subject['教員名'] ?? '教員不明'} | ${subject['曜限'] ?? '曜限不明'} | ${term} | ${subject['単位数'] ?? '?'}単位${tagsHtml}</div></a>`;
                 searchResultsList.appendChild(listItem);
             }
         }
-        
-        /**
-         * 時間帯で科目をフィルターする
-         */
         function filterAndDisplayTimeSearch(periodFilter, dayFilter, timeFilter) {
             let filtered = {};
             for (const subjectCode in allSubjectsData) {
                 const subject = allSubjectsData[subjectCode];
-
                 const subjectPeriod = mapOfferingDivision(subject['開講区分']);
-                if (periodFilter !== '全て' && subjectPeriod !== periodFilter) {
-                    continue;
-                }
-
+                if (periodFilter !== '全て' && subjectPeriod !== periodFilter) continue;
                 let timeSlotMatches = false;
                 if (dayFilter === '全て' && timeFilter === '全て') {
                     timeSlotMatches = true;
                 } else if (subject['曜限']) {
                     const timeSlots = subject['曜限'].split(',');
                     for (const slot of timeSlots) {
-                        const regex = /([月火水木金])\S*\s*(\d+)/;
-                        const match = slot.match(regex);
-
+                        const match = slot.match(/([月火水木金])\S*\s*(\d+)/);
                         if (match) {
                             const dayChar = match[1];
                             const timePart = match[2];
-
                             const dayMatches = (dayFilter === '全て' || dayChar === dayFilter);
                             const timeMatches = (timeFilter === '全て' || timePart === timeFilter);
-
                             if (dayMatches && timeMatches) {
                                 timeSlotMatches = true;
-                                break; 
+                                break;
                             }
                         }
                     }
                 }
-
-                if (timeSlotMatches) {
-                    filtered[subjectCode] = subject;
-                }
+                if (timeSlotMatches) filtered[subjectCode] = subject;
             }
             displayResults(filtered);
         }
-
-        /**
-         * 科目名で科目をフィルターする
-         */
         function filterAndDisplayNameSearch(nameInput) {
             const lowerCaseInput = nameInput.toLowerCase().trim();
             if (!lowerCaseInput) {
@@ -382,16 +164,10 @@
             for (const subjectCode in allSubjectsData) {
                 const subject = allSubjectsData[subjectCode];
                 const subjectName = (subject['科目名'] ?? '').toLowerCase();
-                if (subjectName.includes(lowerCaseInput)) {
-                    filtered[subjectCode] = subject;
-                }
+                if (subjectName.includes(lowerCaseInput)) filtered[subjectCode] = subject;
             }
             displayResults(filtered);
         }
-
-        /**
-         * 現在の検索方法に応じてフィルターを適用する
-         */
         function applyCurrentSearchFilter() {
             if (timeSearchTab.classList.contains('active')) {
                 filterAndDisplayTimeSearch(selectPeriodFilter.value, selectDayFilter.value, selectTimeFilter.value);
@@ -399,33 +175,19 @@
                 filterAndDisplayNameSearch(subjectNameInput.value);
             }
         }
-
-        /**
-         * Firebaseから科目データを取得する
-         */
         async function fetchSubjects() {
             loadingElement.style.display = 'block';
             errorElement.style.display = 'none';
             try {
-                const [syllabusSnapshot, metaSnapshot] = await Promise.all([
-                    get(ref(database, 'syllabus_subjects')),
-                    get(ref(database, 'curriculum_meta'))
-                ]);
-                
+                const [syllabusSnapshot, metaSnapshot] = await Promise.all([get(ref(database, 'syllabus_subjects')), get(ref(database, 'curriculum_meta'))]);
                 const syllabusData = syllabusSnapshot.val() || {};
                 const metaData = metaSnapshot.val() || {};
-
                 allSubjectsData = {};
                 for (const code in syllabusData) {
-                    allSubjectsData[code] = {
-                        ...syllabusData[code],
-                        ...(metaData[code] || {})
-                    };
+                    allSubjectsData[code] = { ...syllabusData[code], ...(metaData[code] || {}) };
                 }
-
                 loadingElement.style.display = 'none';
                 applyCurrentSearchFilter();
-
             } catch (error) {
                 console.error("Firebaseからのデータ取得エラー:", error);
                 loadingElement.style.display = 'none';
@@ -433,8 +195,6 @@
                 errorElement.textContent = `科目情報の読み込みに失敗しました: ${error.message}`;
             }
         }
-
-        // --- イベントリスナー設定 ---
         timeSearchTab.addEventListener('click', () => {
             timeSearchTab.classList.add('active');
             nameSearchTab.classList.remove('active');
@@ -442,7 +202,6 @@
             nameSearchPanel.style.display = 'none';
             applyCurrentSearchFilter();
         });
-
         nameSearchTab.addEventListener('click', () => {
             nameSearchTab.classList.add('active');
             timeSearchTab.classList.remove('active');
@@ -450,22 +209,26 @@
             timeSearchPanel.style.display = 'none';
             applyCurrentSearchFilter();
         });
-
         searchButton.addEventListener('click', applyCurrentSearchFilter);
         nameSearchButton.addEventListener('click', applyCurrentSearchFilter);
-
         selectPeriodFilter.addEventListener('change', applyCurrentSearchFilter);
         selectDayFilter.addEventListener('change', applyCurrentSearchFilter);
         selectTimeFilter.addEventListener('change', applyCurrentSearchFilter);
-        
         subjectNameInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
-                applyCurrentSearchFilter();
-            }
+            if (event.key === 'Enter') applyCurrentSearchFilter();
         });
-
-        // ページ読み込み時に科目データを取得
         fetchSubjects();
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            dateElement.textContent = `${year}/${month}/${day}`;
+        });
     </script>
 </body>
 </html>

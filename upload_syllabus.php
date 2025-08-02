@@ -174,23 +174,21 @@ foreach ($subject_suffixes as $code => $suffix) {
     // 詳細情報の抽出 (tabs-2)
     $tab2_content_node = $xpath->query('//div[@id="tabs-2"]')->item(0);
     if ($tab2_content_node) {
-        // 特定メジャーのみ概要と関連科目を抽出
-        if ($isInfoScienceMajor) { 
-            $overview_aim_node = $xpath->query('.//th[contains(text(), "授業の概要・ねらい")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
-            if ($overview_aim_node) {
-                $extracted_info['授業の概要'] = trim(strip_tags($overview_aim_node->textContent)); 
-            }
+        
+        // 授業の概要・ねらい
+        $overview_aim_node = $xpath->query('.//th[contains(text(), "授業の概要・ねらい")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
+        if ($overview_aim_node) {
+            $extracted_info['授業の概要'] = trim(strip_tags($overview_aim_node->textContent)); 
+        }
 
-            $related_subjects_node = $xpath->query('.//th[contains(text(), "履修を推奨する関連科目")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
-            if ($related_subjects_node) {
-                $extracted_info['関連科目'] = trim(strip_tags($related_subjects_node->textContent));
-            }
+        // 履修を推奨する関連科目
+        $related_subjects_node = $xpath->query('.//th[contains(text(), "履修を推奨する関連科目")]/following-sibling::td[@class="syllabus-break-word"]', $tab2_content_node)->item(0);
+        if ($related_subjects_node) {
+            $extracted_info['関連科目'] = trim(strip_tags($related_subjects_node->textContent));
         }
     } else {
-        // 詳細情報タブがない場合も、特定メジャーの科目なら警告を出す
-        if ($isInfoScienceMajor) {
-            echo "警告: 詳細情報タブ（tabs-2）が見つかりません: " . $full_url . "\n";
-        }
+        // 詳細情報タブ(tabs-2)がどの科目でも見つからない場合に警告を出す
+        echo "警告: 詳細情報タブ（tabs-2）が見つかりません: " . $full_url . "\n";
     }
 
     // 抽出データを配列に追加

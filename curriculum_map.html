@@ -4,220 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>情報学領域 カリキュラム系統図</title>
-    <style>
-        /* 基本スタイル */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; /* 変更点: bodyのmarginを0に */
-            padding: 20px; /* 変更点: 代わりにpaddingを設定 */
-            background-color: #f0f2f5;
-            color: #333;
-            line-height: 1.6;
-            box-sizing: border-box; /* 変更点 */
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.2em;
-        }
-
-        .map-container {
-            max-width: 1400px;
-            width: 100%; /* 変更点: 常に親要素の幅に合わせる */
-            box-sizing: border-box; /* 変更点: paddingを幅計算に含める */
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        /* メジャー選択UI */
-        .major-selector {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #e6f7ff;
-            border-radius: 5px;
-            border: 1px solid #cceeff;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .major-selector label {
-            font-weight: bold;
-            margin-right: 10px;
-            color: #0056b3;
-        }
-        .major-selector select {
-            padding: 8px 15px;
-            border-radius: 5px;
-            border: 1px solid #007bff;
-            font-size: 1em;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%20197.8L145.2%2048.7%203.2%20197.8c-4.6%204.6-12%204.6-16.6%200l-16.6-16.6c-4.6-4.6-4.6-12%200-16.6l155.4-155.4c4.6-4.6%2012-4.6%2016.6%200l155.4%20155.4c4.6%204.6%204.6%2012%200%2016.6l-16.6%2016.6c-4.6%204.7-12%204.7-16.6.1z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 0.7em top 50%;
-            background-size: 0.65em auto;
-            padding-right: 2.5em;
-        }
-
-
-        /* CSS Grid 定義 */
-        .curriculum-map-grid {
-            display: grid;
-            grid-template-columns: 80px repeat(13, minmax(100px, 1fr)); /* 列定義は維持 */
-            grid-template-rows: auto repeat(20, minmax(30px, auto));
-            gap: 5px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            /* min-width: 1400px; */ /* 🗑️ 変更点: この行を削除またはコメントアウト */
-            overflow-x: auto; /* 変更点: はみ出た場合はグリッド内を横スクロール */
-        }
-
-        /* グリッドの軸ラベルスタイル */
-        .grid-label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: #666;
-            border: 1px solid #eee;
-            background-color: #f8f8f8;
-            font-size: 0.9em;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .grid-label.grid-column-header {
-            background-color: #e9e9e9;
-            font-size: 0.95em;
-            padding: 5px;
-            border-bottom: 2px solid #ccc;
-        }
-        .grid-label.semester-num-label {
-            background-color: #e2e2e2;
-            font-size: 1em;
-            color: #333;
-            border-right: 1px solid #bbb;
-            border-bottom: 1px solid #eee;
-            padding: 5px;
-            white-space: pre-wrap;
-            line-height: 1.2;
-        }
-        .grid-label.quarter-label {
-            background-color: #f8f8f8;
-            font-size: 0.85em;
-            color: #666;
-            border-right: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-        }
-
-        /* 科目ブロックのスタイル */
-        .subject-block {
-            background-color: #e0f7fa;
-            border: 1px solid #a7d9e7;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 5px 10px;
-            text-align: center;
-            /* ✨ 変更点: 文字サイズを可変に */
-            font-size: clamp(0.7em, 1.5vw, 0.9em);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-            min-height: 40px; /* 変更点: 小さくなりすぎないように最小の高さを設定 */
-        }
-        .subject-block:hover {
-            transform: scale(1.03);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-        .subject-block a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-        .subject-block a:hover {
-            color: #0056b3;
-        }
-        .subject-block .block-code {
-            font-size: 0.8em; /* 変更点: 親要素に対する相対的なサイズに */
-            color: #666;
-            margin-top: 3px;
-        }
-
-        /* 科目種類に応じた色分け */
-        .type-必修科目 { background-color: #ffcdd2; border-color: #ef9a9a; }
-        .type-選択必修科目 { background-color: #ffe0b2; border-color: #ffcc80; }
-        .type-選択科目 { background-color: #c8e6c9; border-color: #a5d6a7; }
-        .type-メジャー共有科目 { background-color: #bbdefb; border-color: #90caf9; }
-        .type-ゼミなど { background-color: #e1bee7; border-color: #ce93d8; }
-        .type-教養 { background-color: #d8e2dc; border-color: #a3b9b4; } 
-        .type-工学基礎 { background-color: #d0f0c0; border-color: #90c280; }
-        .type-情報基礎 { background-color: #c0d9e8; border-color: #8cb8cc; }
-        .type-情報応用 { background-color: #e6e6fa; color: #6a5acd; border-color: #a7a7ff; }
-
-        /* メッセージ表示 */
-        .loading-message, .error-message {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.1em;
-            color: #6c757d;
-        }
-        .error-message {
-            color: #dc3545;
-        }
-        .back-to-search {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-        }
-        .back-to-search:hover {
-            text-decoration: underline;
-        }
-    </style>
+        <link rel="stylesheet" href="curriculum_map.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>情報学領域 カリキュラム系統図</h1>
+    <nav class="slide-menu" id="slide-menu">
+        <button class="close-button" id="close-button">&times;</button>
+        <ul>
+            <li><a href="home.html">ホーム</a></li>
+            <li><a href="tanikeisan.html">単位取得内訳</a></li>
+            <li><a href="index.html">科目検索（曜日・科目名から）</a></li>
+            <li><a href="curriculum_map.html">科目検索（カリキュラムから）</a></li>
+            <li><a href="tanisimulation.html">予定とシミュレーション</a></li>
+        </ul>
+    </nav>
+    <div class="overlay" id="overlay"></div>
+    <div class="header">
+        <div class="fusen-2">
+            <span class="home-text">情報領域カリキュラム</span>
+        </div>
 
-    <div class="major-selector">
-        <label for="select-map-major">表示メジャーを選択:</label>
-        <select id="select-map-major">
-            <option value="IS">ISメジャー</option>
-            <option value="NC">NCメジャー</option>
-            <option value="XD">XDメジャー</option>
-            <option value="ALL">すべて表示 (実験的)</option> </select>
+        <div class="header-right">
+            <div class="date" id="current-date"></div>
+            <button class="menu-button" aria-label="メニューを開く">
+                <img src="image/ハンバーガーメニュー.svg" alt="メニューアイコン">
+            </button>
+        </div>
     </div>
+    <div class="container">
+        <div class="major-selector">
+            <label for="select-map-major">表示メジャーを選択:</label>
+            <select id="select-map-major">
+                <option value="IS">ISメジャー</option>
+                <option value="NC">NCメジャー</option>
+                <option value="XD">XDメジャー</option>
+            </select>
+        </div>
 
-    <div class="map-container">
-        <div class="curriculum-map-grid" id="curriculum-map-grid">
-            </div>
+        <div class="map-container">
+            <div class="curriculum-map-grid" id="curriculum-map-grid">
+                </div>
+        </div>
+
+        <div class="loading-message" id="loading">カリキュラムデータを読み込み中...</div>
+        <div class="error-message" id="error" style="display: none;"></div>
+        
+        <a href="index.html" class="back-to-search">← 検索画面に戻る</a>
     </div>
-
-    <div class="loading-message" id="loading">カリキュラムデータを読み込み中...</div>
-    <div class="error-message" id="error" style="display: none;"></div>
-    
-    <a href="index.html" class="back-to-search">← 検索画面に戻る</a>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
         import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
@@ -244,19 +79,6 @@
         let allSubjectsData = {}; // /syllabus_subjects からのデータ (スクレイピングした基本情報)
         let allMetaData = {};     // /curriculum_meta からのデータ (汎用タグ情報)
         let allMapPositionsData = {}; // /curriculum_map_positions からのデータ (メジャーごとの位置情報)
-
-        // // ★修正: グリッドの行のマッピングを定義（あなたの指示に厳密に従い定義）
-        // const rowMap = {
-        //     '3セメ1Q': 1, // 3セメスタ1Qが1行目から
-        //     '3セメ2Q': 2, // 3セメスタ2Qが2行目から
-        //     '4セメ3Q': 3, // 4セメスタ3Qが3行目から
-        //     '4セメ4Q': 4, // 4セメスタ4Qが4行目から
-        //     '5セメ1Q': 5, // 5セメスタ1Qが5行目から
-        //     '5セメ2Q': 6, // 5セメスタ2Qが6行目から
-        //     '6セメ3Q': 7, // 6セメスタ3Qが7行目から
-        //     '6セメ4Q': 8, // 6セメスタ4Qが8行目から
-
-        // };
 
         // 科目種類（詳細）に応じたCSSクラスを返すヘルパー関数 (凡例の色分け用)
         function getSubjectTypeClass(type) {
@@ -416,20 +238,11 @@
                         subjectBlock.style.gridRow = `${cssGridRowStart} / ${cssGridRowEnd}`;
                         subjectBlock.style.gridColumn = `${cssGridColStart} / ${cssGridColEnd}`;
 
-                        // 科目名も「科目詳細」から取得する方が確実
-                        // const subjectNameParts = (mapPos['科目詳細'] || '').split('--');
-                        // const displaySubjectName = subjectNameParts.length > 1 ? subjectNameParts.slice(1).join('--') : subject['科目名'] || '不明科目';
-                        // ✅ 新しいコードブロック
                         let displaySubjectName = '';
                         const subjectNameParts = (mapPos['科目詳細'] || '').split('--');
 
-                        // 1. まず「科目詳細」から名前の取得を試みる
-                        // if (subjectNameParts.length > 1 && subjectNameParts[1].trim() !== '') {
-                        //     displaySubjectName = subjectNameParts.slice(1).join('--');
-                        // } 
-                        // 2. 取得できなければ、もう一方のデータから名前を探す
                         if (subject && subject['科目名']) {
-                            displaySubjectName = subject['科目名'];
+                            displaySubjectName = subject['科目名'].split('／')[0].trim();
                         } 
                         // 3. どちらにも名前がなければ、プレースホルダーを表示
                         else {
@@ -438,7 +251,6 @@
                         subjectBlock.innerHTML = `
                             <a href="detail.html?code=${encodeURIComponent(subjectCode)}" target="_blank">
                                 ${displaySubjectName}
-                                <div class="block-code">${subjectCode}</div>
                             </a>
                         `;
                         mapGridElement.appendChild(subjectBlock);
@@ -463,5 +275,43 @@
         // ページ読み込み時にカリキュラム図を描画 (初期表示はISメジャー)
         renderCurriculumMap('IS'); 
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            dateElement.textContent = `${year}/${month}/${day}`;
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.querySelector('.menu-button');
+            const slideMenu = document.getElementById('slide-menu');
+            const overlay = document.getElementById('overlay');
+            const closeButton = document.getElementById('close-button');
+
+            // メニューを開く
+            menuButton.addEventListener('click', () => {
+                slideMenu.classList.add('open');
+                overlay.classList.add('active');
+            });
+
+            // メニューを閉じる（閉じるボタン）
+            closeButton.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+
+            // メニューを閉じる（オーバーレイ）
+            overlay.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
+
 </body>
 </html>

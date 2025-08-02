@@ -1,0 +1,377 @@
+/* --- ページ全体の基本設定 --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff; /* 背景色を白に */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+}
+
+.map-container {
+    max-width: 1400px;
+    width: 100%; /* 変更点: 常に親要素の幅に合わせる */
+    box-sizing: border-box; /* 変更点: paddingを幅計算に含める */
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* メジャー選択UI */
+.major-selector {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e6f7ff;
+    border-radius: 5px;
+    border: 1px solid #cceeff;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.major-selector label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #0056b3;
+}
+.major-selector select {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid #007bff;
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%20197.8L145.2%2048.7%203.2%20197.8c-4.6%204.6-12%204.6-16.6%200l-16.6-16.6c-4.6-4.6-4.6-12%200-16.6l155.4-155.4c4.6-4.6%2012-4.6%2016.6%200l155.4%20155.4c4.6%204.6%204.6%2012%200%2016.6l-16.6%2016.6c-4.6%204.7-12%204.7-16.6.1z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%;
+    background-size: 0.65em auto;
+    padding-right: 2.5em;
+}
+
+
+/* CSS Grid 定義 */
+.curriculum-map-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(13, minmax(65px, 1fr));
+    grid-template-rows: auto repeat(20, minmax(25px, auto));
+    gap: 3px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    overflow-x: auto;
+}
+
+/* グリッドの軸ラベルスタイル */
+.grid-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #666;
+    border: 1px solid #eee;
+    background-color: #f8f8f8;
+    font-size: 0.75em;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 2px;
+}
+.grid-label.grid-column-header {
+    background-color: #e9e9e9;
+    font-size: 0.8em;
+    border-bottom: 2px solid #ccc;
+}
+.grid-label.semester-num-label {
+    background-color: #e2e2e2;
+    font-size: 0.9em;
+    color: #333;
+    border-right: 1px solid #bbb;
+    border-bottom: 1px solid #eee;
+    padding: 5px;
+    white-space: pre-wrap;
+    line-height: 1.2;
+}
+.grid-label.quarter-label {
+    background-color: #f8f8f8;
+    font-size: 0.85em;
+    color: #666;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+/* 科目ブロックのスタイル */
+.subject-block {
+    background-color: #e0f7fa;
+    border: 1px solid #a7d9e7;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 10px;
+    text-align: center;
+    /* ✨ 変更点: 文字サイズを可変に */
+    font-size: clamp(0.7em, 1.5vw, 0.9em);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 40px; /* 変更点: 小さくなりすぎないように最小の高さを設定 */
+}
+.subject-block:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+.subject-block a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+.subject-block a:hover {
+    color: #0056b3;
+}
+.subject-block .block-code {
+    font-size: 0.8em; /* 変更点: 親要素に対する相対的なサイズに */
+    color: #666;
+    margin-top: 3px;
+}
+
+/* 科目種類に応じた色分け */
+.type-必修科目 { background-color: #ffcdd2; border-color: #ef9a9a; }
+.type-選択必修科目 { background-color: #ffe0b2; border-color: #ffcc80; }
+.type-選択科目 { background-color: #c8e6c9; border-color: #a5d6a7; }
+.type-メジャー共有科目 { background-color: #bbdefb; border-color: #90caf9; }
+.type-ゼミなど { background-color: #e1bee7; border-color: #ce93d8; }
+.type-教養 { background-color: #d8e2dc; border-color: #a3b9b4; } 
+.type-工学基礎 { background-color: #d0f0c0; border-color: #90c280; }
+.type-情報基礎 { background-color: #c0d9e8; border-color: #8cb8cc; }
+.type-情報応用 { background-color: #e6e6fa; color: #6a5acd; border-color: #a7a7ff; }
+
+/* メッセージ表示 */
+.loading-message, .error-message {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+    color: #6c757d;
+}
+.error-message {
+    color: #dc3545;
+}
+.back-to-search {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+.back-to-search:hover {
+    text-decoration: underline;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.fusen-2 {
+    display: inline-block;
+    position: relative;
+    padding: .5em 1em;
+    color: #333333;
+    background-color: #f5f5f5;
+    margin-left: 27px; 
+}
+.fusen-2::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 100%;
+    width: 27px;
+    height: 100%;
+    background-color: #ffd700;
+    box-sizing: border-box; 
+}
+.fusen-2::before {
+    position: absolute;
+    bottom: 2px;
+    left: -20px;
+    z-index: -1;
+    transform: rotate(-5deg);
+    width: 100%;
+    height: 50%;
+    background-color: rgba(0, 0, 0, 0.2); 
+    content: "";
+    filter: blur(4px);
+}
+.home-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.date {
+    font-size: 1.1em;
+    color: #555;
+}
+
+.menu-button {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+.menu-button img {
+    width: 100%;
+    height: auto;
+}
+
+/* --- スライドメニューのデザイン --- */
+.slide-menu {
+    position: fixed;
+    top: 0;
+    right: -350px; /* 初期状態では画面の外に隠す */
+    width: 350px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out; /* スライドアニメーション */
+    z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* JavaScriptで .open クラスが付いたときのスタイル */
+.slide-menu.open {
+    right: 0; /* 画面内にスライドイン */
+}
+
+.slide-menu ul {
+    list-style: none;
+    padding: 40px 0 0 0;
+    margin: 0;
+}
+
+.slide-menu li {
+    margin-bottom: 10px;
+}
+
+.slide-menu a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1.1em;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.slide-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* メニュー表示時の背景オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* JavaScriptで .active クラスが付いたときのスタイル */
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- スマートフォンでの表示調整 --- */
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 10px;
+    }
+    .home-text {
+        font-size: 1em;
+    }
+    .date {
+        font-size: 1em;
+        padding-right: 5px; 
+    }
+    .menu-button {
+        width: 64px;
+        height: 64px;
+        padding: 17px;
+    }
+    .search-container {
+        width: 95%;
+        padding: 20px 15px;
+    }
+    .search-results-list {
+        width: 95%;
+    }
+}

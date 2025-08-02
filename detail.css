@@ -1,7 +1,7 @@
-/* --- 基本スタイルとヘッダー --- */
+/* --- ページ全体の基本設定 --- */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #ffffff;
+    background-color: #ffffff; /* 背景色を白に */
     margin: 0;
     padding: 0;
     display: flex;
@@ -56,7 +56,6 @@ body {
     content: "";
     filter: blur(4px);
 }
-
 .home-text {
     font-size: 1.2em;
     font-weight: bold;
@@ -88,131 +87,99 @@ body {
     height: auto;
 }
 
-/* 検索コンテナ */
-.search-container {
-    width: 90%;
-    max-width: 800px;
-    padding: 25px 30px;
-    box-sizing: border-box;
-}
 
-/* 検索タブ */
-.search-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    margin-bottom: 20px;
-    /* タブの下の線をなくすため、border-bottom を削除 */
-}
-
-.search-tab-button {
-    padding: 10px 4px;
-    text-align: center;
-    cursor: pointer;
-    border: none;
-    background-color: transparent;
-    font-size: 1.1em;
-    font-weight: 500;
-    color: #6c757d;
-    position: relative;
-    transition: color 0.3s ease;
-}
-.search-tab-button:hover { color: #007bff; }
-.search-tab-button.active {
-    color: #007bff;
-    font-weight: 700;
-}
-.search-tab-button::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
+.container {
     width: 100%;
-    height: 3px;
-    background-color: #007bff;
-    transform: scaleX(0);
-    transition: transform 0.3s ease-in-out;
-}
-.search-tab-button.active::after { transform: scaleX(1); }
-
-/* 検索入力フォーム */
-.search-input-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 0;
-}
-.search-input-group input,
-.search-input-group select {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 12px 15px;
-    font-size: 1em;
-    font-family: 'Noto Sans JP', sans-serif;
-    min-width: 130px;
-}
-#name-search-panel .search-input-group input {
-    flex-grow: 1;
-}
-
-/* --- 検索結果のホバーアクションを追加 --- */
-.search-results-list li {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.search-results-list li:hover {
-    transform: translateY(-4px); /* 少し上に浮き上がる */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* 影を少し濃くする */
-}
-
-/* 検索結果リスト */
-.search-results-list {
-    list-style: none;
-    padding: 0;
-    width: 90%;
     max-width: 800px;
-    margin: 30px 0;
+    padding: 20px;
+    box-sizing: border-box;
+    /* background-color, margin, border-radius, box-shadow を削除 */
 }
-.search-results-list li {
-    padding: 20px 25px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    margin-bottom: 15px;
-}
-.search-results-list li a {
-    text-decoration: none;
-    color: #3d405b;
-    font-weight: 700;
-    font-size: 1.15em;
-}
-.search-results-list li .result-details {
-    font-size: 0.9em;
-    font-weight: 400;
-    color: #6c757d;
-    margin-top: 8px;
-}
-.subject-tag {
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    font-weight: 500;
-    display: inline-block;
-    border: 1px solid #dee2e6;
-    margin-top: 5px;
-}
-.tag-special-4 { background-color: #f3e5f5; color: #8e24aa; border-color: #e1bee7; }
 
-/* メッセージ表示 */
-.loading-message, .error-message, .no-results-message {
+/* 科目詳細の各項目（ラベルと値のペア） */
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 10px;
+    border-bottom: 1px solid #f0f0f0; /* 区切り線 */
+}
+
+.detail-item .label {
+    color: #868e96; /* ラベルの文字色をグレーに */
+    font-size: 0.9em;
+}
+
+.detail-item .value {
+    color: #212529; /* 値の文字色を濃く */
+    font-size: 1em;
+    font-weight: 500;
+}
+
+/* 授業概要などの長い文章セクション */
+.detail-section {
+    padding: 18px 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-section .label {
+    color: #868e96;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+    display: block; /* ラベルをブロック要素にして改行 */
+}
+
+.detail-section .value {
+    color: #212529;
+    line-height: 1.8; /* 行間を広めに */
+    font-size: 1em;
+    white-space: pre-wrap; /* DBからの改行を反映 */
+}
+
+.detail-item:last-child,
+.detail-section:last-of-type {
+    border-bottom: none;
+}
+
+/* 下部のボタン */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.button-back, .button-add {
+    padding: 14px 0;
+    width: 160px;
+    font-size: 1em;
+    font-weight: 500;
+    border-radius: 50px; /* 角を完全に丸く */
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.button-back:hover, .button-add:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px); /* ホバー時に少し浮き上がる */
+}
+
+.button-add {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.button-add:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.loading-message, .error-message {
     text-align: center;
     padding: 40px 20px;
-    font-size: 1.1em;
     color: #6c757d;
 }
 
@@ -291,6 +258,7 @@ body {
     opacity: 1;
     visibility: visible;
 }
+
 
 /* --- スマートフォンでの表示調整 --- */
 @media (max-width: 768px) {

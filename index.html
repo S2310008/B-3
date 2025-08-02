@@ -10,6 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <nav class="slide-menu" id="slide-menu">
+        <button class="close-button" id="close-button">&times;</button>
+        <ul>
+            <li><a href="home.html">ホーム</a></li>
+            <li><a href="tanikeisan.html">単位取得内訳</a></li>
+            <li><a href="index.html">科目検索（曜日・科目名から）</a></li>
+            <li><a href="curriculum_map.html">科目検索（カリキュラムから）</a></li>
+            <li><a href="tanisimulation.html">予定とシミュレーション</a></li>
+        </ul>
+    </nav>
+    <div class="overlay" id="overlay"></div>
+
     <div class="header">
         <div class="fusen-2">
             <span class="home-text">カリキュラム検索</span>
@@ -35,7 +47,6 @@
                     <option value="全て">開講期間</option>
                     <option value="前期">前期</option>
                     <option value="後期">後期</option>
-                    <option value="通年">通年</option>
                 </select>
                 <select id="select-day-filter">
                     <option value="全て">曜日</option>
@@ -102,7 +113,6 @@
             if (!division) return '不明';
             if (division.includes('第1クォーター') || division.includes('第2クォーター') || division.includes('前期')) return '前期';
             if (division.includes('第3クォーター') || division.includes('第4クォーター') || division.includes('後期')) return '後期';
-            if (division.includes('通年')) return '通年';
             return 'その他';
         }
         function displayResults(subjectsToDisplay) {
@@ -226,6 +236,33 @@
             const month = (today.getMonth() + 1).toString().padStart(2, '0');
             const day = today.getDate().toString().padStart(2, '0');
             dateElement.textContent = `${year}/${month}/${day}`;
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.querySelector('.menu-button'); // 以前のID指定からクラス指定に変更
+            const slideMenu = document.getElementById('slide-menu');
+            const overlay = document.getElementById('overlay');
+            const closeButton = document.getElementById('close-button');
+
+            // メニューを開く
+            menuButton.addEventListener('click', () => {
+                slideMenu.classList.add('open');
+                overlay.classList.add('active');
+            });
+
+            // メニューを閉じる（閉じるボタン）
+            closeButton.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+
+            // メニューを閉じる（オーバーレイ）
+            overlay.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
         });
     </script>
 </body>

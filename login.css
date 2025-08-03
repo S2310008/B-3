@@ -1,62 +1,136 @@
-*{
+body {
+    font-family: sans-serif;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial',sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
 }
-body{
-    background-color: #f4f4f4;
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-marker {
+    width: 5px;
+    height: 30px;
+    background-color: #ffcc00;
+    margin-right: 10px;
+}
+
+.header-title {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.header-date {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: calc(100vh - 50px); /* ヘッダーの高さを引く */
 }
-.form-container{
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
+
+.form-card {
+    background-color: #e0f0ff;
+    padding: 40px;
+    border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
+    width: 350px;
+    box-sizing: border-box;
 }
-h2{
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+
+.form-group {
+    margin-bottom: 25px;
 }
-.input-group{
-    margin-bottom: 15px;
-}
-.input-group label{
+
+.form-label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
-    color: #555;
+    font-size: 0.9em;
+    color: #333;
 }
-.input-group input{
+
+.form-input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius:  4px;
-    font-size: 16px;
-    color: #333;
-    transition: border-coler 0.3s;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1em;
 }
-.input-group input:focus{
- border-color: #007bff;
- outline: none;
+
+.form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
 }
-button{
+
+.form-checkbox-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.form-checkbox {
+    margin-right: 5px;
+    transform: scale(1.2);
+}
+
+.form-button {
     width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
+    padding: 12px;
     border: none;
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-coler 0.3s;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
 }
-button:hover{
-    background-color: #0056b3;
+
+.form-button.primary-button {
+    background-color: #fff;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.form-button.secondary-button {
+    background-color: #fff;
+    color: #666;
+    border: 1px solid #ccc;
+}
+
+.form-button:hover {
+    opacity: 0.9;
+}
+
+.form-checkbox-group {
+    /* ... 既存のスタイル ... */
+    align-items: center; /* 垂直方向の中央揃えを確保 */
+}
+
+.terms-link {
+    text-decoration: none; /* 下線を非表示 */
+    color: #333; /* テキストの色を合わせる */
+    margin-left: 5px;
+}
+
+.terms-link:hover {
+    text-decoration: underline; /* ホバー時に下線を表示 */
 }

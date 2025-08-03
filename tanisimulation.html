@@ -3,272 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>単位取得計画シミュレーション</title>
+    <title>単位シミュレーション</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="tanni.css">
     <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-        .container { max-width: 950px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: #0056b3; }
-        p { margin-bottom: 15px; }
-        .input-section div, .display-section div { margin-bottom: 10px; display: flex; align-items: center; }
-        .input-section label, .display-section label { flex: 0 0 220px; margin-right: 10px; font-weight: bold; color: #555; }
-        .input-section input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; max-width: 80px; }
-        .display-unit-value { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-width: 80px; background-color: #f9f9f9; color: #666; text-align: right;}
-
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 15px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover { background-color: #0056b3; }
-        .results-section { margin-top: 20px; }
-        .results-section div { margin-bottom: 8px; }
-        .result-item { font-weight: bold; color: #0056b3; display: inline-block; width: 220px; }
-        .total-summary { margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
-        .total-summary .result-item { color: #d9534f; }
-        .total-summary #totalSimulatedAcquired { color: #28a745; }
-        .chart-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 30px auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: 400px;
-        }
-        .navigation { margin-top: 30px; text-align: center; }
-        .navigation a {
-            display: inline-block;
-            padding: 10px 15px;
-            margin: 0 10px;
-            background-color: #6c757d;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-        .navigation a:hover {
-            background-color: #5a6268;
-        }
-
-        /* ----- 時間割表示用のスタイル ----- */
-        .timetable-tabs {
-            display: flex;
-            flex-wrap: wrap; /* 小さい画面で折り返す */
-            gap: 5px;
-            margin-bottom: 15px;
-            justify-content: center;
-        }
-        .timetable-tabs button {
-            padding: 8px 12px;
-            background-color: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            min-width: 60px; /* ボタンの最小幅 */
-            margin-top: 0; /* デフォルトボタンのmargin-topをリセット */
-        }
-        .timetable-tabs button.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
-        .subject-list-container {
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            background-color: #f9f9f9;
-        }
-        .subject-header, .subject-item {
-            display: grid;
-            grid-template-columns: 70px 20px 70px 20px 70px 20px 100px 1fr 60px;
-            gap: 5px;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed #eee;
-        }
-        .subject-item:last-child {
-            border-bottom: none;
-        }
-        .subject-item label {
-            margin: 0;
-            font-weight: normal;
-            flex: none;
-        }
-        .subject-item input[type="checkbox"] {
-            margin: 0;
-            justify-self: center;
-            width: 16px;
-            height: 16px;
-        }
-        .subject-header div {
-            text-align: center;
-            white-space: nowrap;
-        }
-        .subject-header div:nth-child(1), .subject-item div:nth-child(1) { text-align: center; }
-        .subject-header div:nth-child(2), .subject-item div:nth-child(2) { text-align: center; }
-        .subject-header div:nth-child(3), .subject-item div:nth-child(3) { text-align: center; }
-        .subject-header div:nth-child(4), .subject-item div:nth-child(4) { text-align: center; }
-        .subject-header div:nth-child(5), .subject-item div:nth-child(5) { text-align: center; }
-        .subject-header div:nth-child(6), .subject-item div:nth-child(6) { text-align: center; }
-        .subject-header div:nth-child(7) { text-align: center; }
-        .subject-header div:nth-child(8) { text-align: left; }
-        .subject-header div:nth-child(9) { text-align: center; }
-
-        .subject-item .units {
-            text-align: center;
+        /* 無効化されたチェックボックスの見た目を調整 */
+        input[type="checkbox"]:disabled {
+            accent-color: #9e9e9e;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
+        <nav class="slide-menu" id="slide-menu">
+        <button class="close-button" id="close-button">&times;</button>
+        <ul>
+            <li><a href="home.html">ホーム</a></li>
+            <li><a href="tanikeisan.html">単位取得内訳</a></li>
+            <li><a href="index.html">科目検索（曜日・科目名から）</a></li>
+            <li><a href="curriculum_map.html">科目検索（カリキュラムから）</a></li>
+            <li><a href="tanisimulation.html">予定とシミュレーション</a></li>
+        </ul>
+    </nav>
+    <div class="overlay" id="overlay"></div>
+
+    <div class="header">
+        <div class="fusen-2">
+            <span class="home-text">単位シミュレーション</span>
+        </div>
+
+        <div class="header-right">
+            <div class="date" id="current-date"></div>
+            <button class="menu-button" aria-label="メニューを開く">
+                <img src="image/ハンバーガーメニュー.svg" alt="メニューアイコン">
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            dateElement.textContent = `${year}/${month}/${day}`;
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.querySelector('.menu-button');
+            const slideMenu = document.getElementById('slide-menu');
+            const overlay = document.getElementById('overlay');
+            const closeButton = document.getElementById('close-button');
+
+            // メニューを開く
+            menuButton.addEventListener('click', () => {
+                slideMenu.classList.add('open');
+                overlay.classList.add('active');
+            });
+
+            // メニューを閉じる（閉じるボタン）
+            closeButton.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+
+            // メニューを閉じる（オーバーレイ）
+            overlay.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
     <div class="container">
-        <h1>単位取得計画シミュレーション</h1>
+        <h1>単位シミュレーション</h1>
 
-        <p>現在までの取得単位と、**これから取得する予定の単位**を入力して、卒業要件の達成状況をシミュレーションできます。</p>
+        <p>卒業までに必要な単位をシミュレーションできます。単位計算ページで保存した取得単位に加え、今後履修予定の科目にチェックを入れてみましょう。</p>
 
-        <h2>現在の取得単位数（前ページから自動読み込み）</h2>
-        <div class="display-section current-units-display">
+        <div class="input-section">
             <div>
-                <label>教養教育科目（現在）:</label>
-                <span id="displayInitialKyoyoUnits" class="display-unit-value">0</span> 単位
+                <label for="major1Select">第1メジャーを選択:</label>
+                <select id="major1Select" onchange="updateCalculations()">
+                    <option value="IS">IS</option>
+                    <option value="NC">NC</option>
+                    <option value="XD">XD</option>
+                </select>
             </div>
             <div>
-                <label>工学基礎科目（現在）:</label>
-                <span id="displayInitialKogakuKisoUnits" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label>情報基礎科目（現在）:</label>
-                <span id="displayInitialJohoKisoUnits" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label>情報応用科目（現在）:</label>
-                <span id="displayInitialJohoOyoUnits" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label><span id="displayInitialMajor1Label">第1メジャー科目</span>（現在）:</label>
-                <span id="displayInitialMajor1Units" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label><span id="displayInitialMajor2Label">第2メジャー科目</span>（現在）:</label>
-                <span id="displayInitialMajor2Units" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label>その他メジャー科目（現在）:</label>
-                <span id="displayInitialOtherMajorUnits" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label>卒業研究（現在）:</label>
-                <span id="displayInitialSotsukenUnits" class="display-unit-value">0</span> 単位
-            </div>
-            <div>
-                <label>自由選択科目（現在）:</label>
-                <span id="displayInitialJiyuSentakuUnits" class="display-unit-value">0</span> 単位
+                <label for="major2Select">第2メジャーを選択:</label>
+                <select id="major2Select" onchange="updateCalculations()">
+                    <option value="IS">IS</option>
+                    <option value="NC">NC</option>
+                    <option value="XD">XD</option>
+                </select>
             </div>
         </div>
 
         <hr>
-        <h2>これから取得する予定の科目一覧 (時間割)</h2>
-        <p>表示したい時間割をクリックし、取得予定の科目にチェックを入れてください。どこの時間割にも含まれていない科目は「その他」を選択してください。</p>
-        <div class="timetable-tabs" id="timetableTabsSimulation">
+        <h2>科目一覧 (時間割)</h2>
+        <p>表示したい時間割をクリックしてください。どこの時間割にも含まれていない科目は「その他」を選択してください。</p>
+        <div class="timetable-tabs" id="timetableTabs">
             </div>
 
         <div class="subject-list-container">
             <div class="subject-header">
                 <div>Tag1</div>
-                <div></div> <div>Tag2</div>
-                <div></div> <div>Tag3</div>
-                <div></div> <div>Tag4</div>
+                <div></div>
+                <div>Tag2</div>
+                <div></div>
+                <div>Tag3</div>
+                <div></div>
+                <div>Tag4</div>
                 <div>科目名</div>
                 <div>単位</div>
             </div>
-            <div id="subjectListSimulation">
-            </div>
+            <div id="subjectList">
+                </div>
         </div>
-        <hr>
-        <h2>これから取得する予定の単位数（科目チェックと連動）</h2>
-        <div class="input-section plan-units">
+
+        <div class="input-section">
+            <p>※チェックした科目以外に、すでに取得済みの単位があれば、以下に手動で入力してください。</p>
             <div>
-                <label for="planKyoyoUnits">教養教育科目（予定）:</label>
-                <input type="number" id="planKyoyoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualKyoyoUnits">教養教育科目:</label>
+                <input type="number" id="manualKyoyoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planKogakuKisoUnits">工学基礎科目（予定）:</label>
-                <input type="number" id="planKogakuKisoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualKogakuKisoUnits">工学基礎科目:</label>
+                <input type="number" id="manualKogakuKisoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planJohoKisoUnits">情報基礎科目（予定）:</label>
-                <input type="number" id="planJohoKisoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualJohoKisoUnits">情報基礎科目:</label>
+                <input type="number" id="manualJohoKisoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planJohoOyoUnits">情報応用科目（予定）:</label>
-                <input type="number" id="planJohoOyoUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualJohoOyoUnits">情報応用科目:</label>
+                <input type="number" id="manualJohoOyoUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planMajor1Units"><span id="planMajor1Label">第1メジャー科目</span>（予定）:</label>
-                <input type="number" id="planMajor1Units" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualMajor1Units"><span id="manualMajor1Label">第1メジャー科目</span>:</label>
+                <input type="number" id="manualMajor1Units" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planMajor2Units"><span id="planMajor2Label">第2メジャー科目</span>（予定）:</label>
-                <input type="number" id="planMajor2Units" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualMajor2Units"><span id="manualMajor2Label">第2メジャー科目</span>:</label>
+                <input type="number" id="manualMajor2Units" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planOtherMajorUnits">その他メジャー科目（予定）:</label>
-                <input type="number" id="planOtherMajorUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualOtherMajorUnits">その他メジャー科目:</label>
+                <input type="number" id="manualOtherMajorUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planSotsukenUnits">卒業研究（予定）:</label>
-                <input type="number" id="planSotsukenUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualSotsukenUnits">卒業研究:</label>
+                <input type="number" id="manualSotsukenUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
             <div>
-                <label for="planJiyuSentakuUnits">自由選択科目（予定）:</label>
-                <input type="number" id="planJiyuSentakuUnits" value="0" min="0" onchange="updateSimulation()"> 単位
+                <label for="manualJiyuSentakuUnits">自由選択科目:</label>
+                <input type="number" id="manualJiyuSentakuUnits" value="0" min="0" onchange="updateCalculations()"> 単位
             </div>
         </div>
 
         <div class="results-section">
-            <h2>シミュレーション結果（最終的な単位状況）</h2>
+            <h2>取得単位数合計</h2>
             <div>
-                <span class="result-item">教養教育科目 最終:</span> <span id="finalKyoyo">0</span> / <span id="targetKyoyo">24</span> 単位
+                <span class="result-item">教養教育科目:</span> <span id="acquiredKyoyo">0</span> / <span id="targetKyoyo">24</span> 単位 (<span id="remainingKyoyo">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">工学基礎科目 最終:</span> <span id="finalKogakuKiso">0</span> / <span id="targetKogakuKiso">16</span> 単位
+                <span class="result-item">工学基礎科目:</span> <span id="acquiredKogakuKiso">0</span> / <span id="targetKogakuKiso">16</span> 単位 (<span id="remainingKogakuKiso">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">情報基礎科目 最終:</span> <span id="finalJohoKiso">0</span> / <span id="targetJohoKiso">12</span> 単位
+                <span class="result-item">情報基礎科目:</span> <span id="acquiredJohoKiso">0</span> / <span id="targetJohoKiso">12</span> 単位 (<span id="remainingJohoKiso">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">情報応用科目 最終:</span> <span id="finalJohoOyo">0</span> / <span id="targetJohoOyo">4</span> 単位
+                <span class="result-item">情報応用科目:</span> <span id="acquiredJohoOyo">0</span> / <span id="targetJohoOyo">4</span> 単位 (<span id="remainingJohoOyo">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item"><span id="finalMajor1Label">第1メジャー科目</span> 最終:</span> <span id="finalMajor1">0</span> / <span id="targetMajor1">28</span> 単位
+                <span class="result-item"><span id="major1Label">第1メジャー科目</span>:</span> <span id="acquiredMajor1">0</span> / <span id="targetMajor1">28</span> 単位 (<span id="remainingMajor1">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item"><span id="finalMajor2Label">第2メジャー科目</span> 最終:</span> <span id="finalMajor2">0</span> / <span id="targetMajor2">14</span> 単位
+                <span class="result-item"><span id="major2Label">第2メジャー科目</span>:</span> <span id="acquiredMajor2">0</span> / <span id="targetMajor2">14</span> 単位 (<span id="remainingMajor2">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">その他メジャー科目 最終:</span> <span id="finalOtherMajor">0</span> / <span id="targetOtherMajor">10</span> 単位
+                <span class="result-item">その他メジャー科目:</span> <span id="acquiredOtherMajor">0</span> / <span id="targetOtherMajor">10</span> 単位 (<span id="remainingOtherMajor">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">卒業研究 最終:</span> <span id="finalSotsuken">0</span> / <span id="targetSotsuken">8</span> 単位
+                <span class="result-item">卒業研究:</span> <span id="acquiredSotsuken">0</span> / <span id="targetSotsuken">8</span> 単位 (<span id="remainingSotsuken">0</span> 単位不足)
             </div>
             <div>
-                <span class="result-item">自由選択科目 最終:</span> <span id="finalJiyuSentaku">0</span> / <span id="targetJiyuSentaku">8</span> 単位
+                <span class="result-item">自由選択科目:</span> <span id="acquiredJiyuSentaku">0</span> / <span id="targetJiyuSentaku">8</span> 単位 (<span id="remainingJiyuSentaku">0</span> 単位不足)
             </div>
         </div>
 
@@ -278,32 +204,32 @@
                 <span class="result-item">全体の目標取得単位数:</span> <span id="totalTarget">0</span> 単位
             </div>
             <div>
-                <span class="result-item">全体のシミュレーション後取得済み単位数:</span> <span id="totalSimulatedAcquired">0</span> 単位
+                <span class="result-item">全体の現在取得済み単位数:</span> <span id="totalAcquired">0</span> 単位
             </div>
             <div>
-                <span class="result-item">全体のシミュレーション後残り単位数:</span> <span id="totalSimulatedRemaining">0</span> 単位
+                <span class="result-item">全体の残り単位数:</span> <span id="totalRemaining">0</span> 単位
             </div>
         </div>
 
         <div class="chart-container">
             <h2>各科目の達成状況グラフ</h2>
+            <div id="requiredWarning" class="required-warning" style="white-space: pre-wrap; display: none;">必修科目を履修できていません</div>
             <canvas id="unitStatusChart"></canvas>
         </div>
 
         <div class="navigation">
-            <a href="tanikeisan.html">単位計算に戻る</a>
+            <a href="tanikeisan.html">単位計算へ</a>
         </div>
     </div>
 
     <script>
         const tagToCategoryMap = {
-            // IS, NC, XD は動的に処理するためここでは定義しない
             "その他": "otherMajor",
             "連携": "jiyuSentaku",
             "教養": "kyoyo",
             "工学基礎": "kogakuKiso",
             "工学基礎必修": "kogakuKiso",
-            "工学基礎必履修":"kogakuKiso",
+            "工学基礎必履修": "kogakuKiso",
             "情報基礎必修": "johoKiso",
             "情報応用必修": "johoOyo",
             "英語必修": "kyoyo",
@@ -311,6 +237,8 @@
             "情報処理必修": "kyoyo",
             "わかやま必修": "kyoyo"
         };
+
+        const requiredTags = ["工学基礎必修", "情報基礎必修", "情報応用必修", "誘い必修", "わかやま必修", "英語必修"];
 
         let targetUnits = {
             kyoyo: 24, kogakuKiso: 16, johoKiso: 12, johoOyo: 4,
@@ -323,199 +251,436 @@
             XD: { major1: 28, major2: 14 }
         };
 
-        let tanisimulationChart; 
-        let initialAcquiredUnitsFromStorage = {}; 
-        let selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
+        let unitStatusChart;
         let allSubjects = [];
-        let currentSimulationFilter = '月／Mon　1'; // シミュレーションページの初期フィルター (全角スペースに修正)
+        let currentFilter = '月／Mon　1';
+        let checkedSubjectTags = {};
+        
+        const simulationDataKey = 'tanisimulationData';
+        const calculationDataKey = 'tanikeisanData';
+        
+        let tanikeisanCheckedIds = new Set();
+        let tanikeisanManualUnits = {};
 
-        // 曜日と時限の定義 (データベース表記に合わせる)
         const daysShort = ['月', '火', '水', '木', '金'];
         const daysFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
         const periods = ['1', '2', '3', '4', '5', '6'];
         const allTimeSlots = [];
 
-        // 月曜から金曜まで、1限から6限の順に追加 (全角スペースを使用)
         daysShort.forEach((dayShort, index) => {
             periods.forEach(period => {
                 allTimeSlots.push(`${dayShort}／${daysFull[index]}　${period}`);
             });
         });
-        allTimeSlots.push('他／Otr'); // 最後にその他の科目も追加
+        allTimeSlots.push('他／Otr');
 
-
-        function calculateUnitsForSimulation(initialAcquiredUnits, plannedUnits) {
-            const combinedAcquired = {};
-            for (const category in targetUnits) {
-                if (targetUnits.hasOwnProperty(category)) {
-                    combinedAcquired[category] = (initialAcquiredUnits[category] || 0) + (plannedUnits[category] || 0);
-                }
-            }
-
-            const currentAcquired = { ...combinedAcquired };
-
-            const major1Overflow = Math.max(0, currentAcquired.major1 - targetUnits.major1);
+        function calculateAcquiredUnits(currentAcquired) {
+            const acquired = { ...currentAcquired };
+            const major1Overflow = Math.max(0, acquired.major1 - targetUnits.major1);
             if (major1Overflow > 0) {
-                currentAcquired.otherMajor += major1Overflow;
-                currentAcquired.major1 = targetUnits.major1;
+                acquired.otherMajor += major1Overflow;
+                acquired.major1 = targetUnits.major1;
             }
 
-            const major2Overflow = Math.max(0, currentAcquired.major2 - targetUnits.major2);
+            const major2Overflow = Math.max(0, acquired.major2 - targetUnits.major2);
             if (major2Overflow > 0) {
-                currentAcquired.otherMajor += major2Overflow;
-                currentAcquired.major2 = targetUnits.major2;
+                acquired.otherMajor += major2Overflow;
+                acquired.major2 = targetUnits.major2;
             }
 
-            const otherMajorToJiyuSentaku = Math.max(0, currentAcquired.otherMajor - targetUnits.otherMajor);
+            const otherMajorToJiyuSentaku = Math.max(0, acquired.otherMajor - targetUnits.otherMajor);
             if (otherMajorToJiyuSentaku > 0) {
-                currentAcquired.jiyuSentaku += otherMajorToJiyuSentaku;
-                currentAcquired.otherMajor = targetUnits.otherMajor;
+                acquired.jiyuSentaku += otherMajorToJiyuSentaku;
+                acquired.otherMajor = targetUnits.otherMajor;
             }
 
 
-            const kyoyoOverflow = Math.max(0, currentAcquired.kyoyo - targetUnits.kyoyo);
+            const kyoyoOverflow = Math.max(0, acquired.kyoyo - targetUnits.kyoyo);
             if (kyoyoOverflow > 0) {
-                currentAcquired.jiyuSentaku += kyoyoOverflow;
-                currentAcquired.kyoyo = targetUnits.kyoyo;
+                acquired.jiyuSentaku += kyoyoOverflow;
+                acquired.kyoyo = targetUnits.kyoyo;
             }
 
-            const kogakuKisoOverflow = Math.max(0, currentAcquired.kogakuKiso - targetUnits.kogakuKiso);
+            const kogakuKisoOverflow = Math.max(0, acquired.kogakuKiso - targetUnits.kogakuKiso);
             if (kogakuKisoOverflow > 0) {
-                currentAcquired.jiyuSentaku += kogakuKisoOverflow;
-                currentAcquired.kogakuKiso = targetUnits.kogakuKiso;
+                acquired.jiyuSentaku += kogakuKisoOverflow;
+                acquired.kogakuKiso = targetUnits.kogakuKiso;
             }
 
-            const johoKisoOverflow = Math.max(0, currentAcquired.johoKiso - targetUnits.johoKiso);
+            const johoKisoOverflow = Math.max(0, acquired.johoKiso - targetUnits.johoKiso);
             if (johoKisoOverflow > 0) {
-                currentAcquired.jiyuSentaku += johoKisoOverflow;
-                currentAcquired.johoKiso = targetUnits.johoKiso;
+                acquired.jiyuSentaku += johoKisoOverflow;
+                acquired.johoKiso = targetUnits.johoKiso;
             }
 
-            const johoOyoOverflow = Math.max(0, currentAcquired.johoOyo - targetUnits.johoOyo);
+            const johoOyoOverflow = Math.max(0, acquired.johoOyo - targetUnits.johoOyo);
             if (johoOyoOverflow > 0) {
-                currentAcquired.jiyuSentaku += johoOyoOverflow;
-                currentAcquired.johoOyo = targetUnits.johoOyo;
+                acquired.jiyuSentaku += johoOyoOverflow;
+                acquired.johoOyo = targetUnits.johoOyo;
             }
 
 
-            const finalResults = {};
+            const results = {};
             let totalAcquiredForGraduation = 0;
             let totalRemainingSum = 0;
             let totalTargetUnitsSum = 0;
 
             for (const category in targetUnits) {
                 if (targetUnits.hasOwnProperty(category)) {
-                    const finalAcquiredForCategory = Math.min(currentAcquired[category], targetUnits[category]);
-                    
-                    finalResults[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
-                    
+                    const finalAcquiredForCategory = Math.min(acquired[category], targetUnits[category]);
+                    results[category] = Math.max(0, targetUnits[category] - finalAcquiredForCategory);
+
                     if (category !== 'jiyuSentaku') {
                         totalAcquiredForGraduation += finalAcquiredForCategory;
                     }
                     totalTargetUnitsSum += targetUnits[category];
                 }
             }
-            
-            finalResults.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - currentAcquired.jiyuSentaku); // ここは目標に対して不足している分
-            totalAcquiredForGraduation += currentAcquired.jiyuSentaku; // 合計には取得した分全てを足す
+            results.jiyuSentaku = Math.max(0, targetUnits.jiyuSentaku - acquired.jiyuSentaku);
+            totalAcquiredForGraduation += acquired.jiyuSentaku;
 
-            finalResults.totalAcquired = totalAcquiredForGraduation;
+            results.totalAcquired = totalAcquiredForGraduation;
 
-            for (const category in finalResults) {
-                if (finalResults.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining' && category !== 'totalTargetUnits' && category !== 'finalCategoryAcquired' && category !== 'currentAcquired') {
-                    totalRemainingSum += finalResults[category];
+            for (const category in results) {
+                if (results.hasOwnProperty(category) && category !== 'totalAcquired' && category !== 'totalRemaining' && category !== 'totalTargetUnits' && category !== 'actualAcquired') {
+                    totalRemainingSum += results[category];
                 }
             }
-            finalResults.totalRemaining = totalRemainingSum;
+            results.totalRemaining = totalRemainingSum;
 
-            finalResults.finalCategoryAcquired = {};
-            for (const category in targetUnits) {
-                finalResults.finalCategoryAcquired[category] = Math.min(currentAcquired[category], targetUnits[category]);
-            }
-            finalResults.currentAcquired = currentAcquired;
+            results.actualAcquired = acquired;
+            results.totalTargetUnits = totalTargetUnitsSum;
 
-            finalResults.totalTargetUnits = totalTargetUnitsSum;
-
-            return finalResults;
+            return results;
         }
 
         function updateDisplayMajorLabelsAndTargets() {
-            const savedData = localStorage.getItem('tanikeisanData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' };
-            } else {
-                selectedMajorsFromStorage = { major1: 'IS', major2: 'IS' };
-            }
+            const major1 = document.getElementById('major1Select').value;
+            const major2 = document.getElementById('major2Select').value;
 
-            targetUnits.major1 = majorTargetUnits[selectedMajorsFromStorage.major1].major1;
-            targetUnits.major2 = majorTargetUnits[selectedMajorsFromStorage.major2].major2;
+            targetUnits.major1 = majorTargetUnits[major1].major1;
+            targetUnits.major2 = majorTargetUnits[major2].major2;
 
-            document.getElementById('displayInitialMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
-            document.getElementById('displayInitialMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
-            document.getElementById('planMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
-            document.getElementById('planMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
-            document.getElementById('finalMajor1Label').textContent = `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
-            document.getElementById('finalMajor2Label').textContent = `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
+            document.getElementById('major1Label').textContent = `第1メジャー科目 (${major1})`;
+            document.getElementById('major2Label').textContent = `第2メジャー科目 (${major2})`;
+            document.getElementById('manualMajor1Label').textContent = `第1メジャー科目 (${major1})`;
+            document.getElementById('manualMajor2Label').textContent = `第2メジャー科目 (${major2})`;
         }
 
 
-        function updateSimulation() {
-            const initialUnits = initialAcquiredUnitsFromStorage; 
+        function updateCalculations() {
+            updateDisplayMajorLabelsAndTargets();
 
-            const plannedUnits = {
-                kyoyo: parseInt(document.getElementById('planKyoyoUnits').value) || 0,
-                kogakuKiso: parseInt(document.getElementById('planKogakuKisoUnits').value) || 0,
-                johoKiso: parseInt(document.getElementById('planJohoKisoUnits').value) || 0,
-                johoOyo: parseInt(document.getElementById('planJohoOyoUnits').value) || 0,
-                major1: parseInt(document.getElementById('planMajor1Units').value) || 0,
-                major2: parseInt(document.getElementById('planMajor2Units').value) || 0,
-                otherMajor: parseInt(document.getElementById('planOtherMajorUnits').value) || 0,
-                sotsuken: parseInt(document.getElementById('planSotsukenUnits').value) || 0,
-                jiyuSentaku: parseInt(document.getElementById('planJiyuSentakuUnits').value) || 0
+            // 単位集計用のオブジェクトを初期化
+            let normalUnitsTag1 = {};
+            let normalUnitsTag2_3 = {};
+            let simulatedUnitsTag1 = {};
+            let simulatedUnitsTag2_3 = {};
+
+            // 全ての単位オブジェクトを初期化
+            Object.keys(targetUnits).forEach(key => {
+                normalUnitsTag1[key] = 0;
+                normalUnitsTag2_3[key] = 0;
+                simulatedUnitsTag1[key] = 0;
+                simulatedUnitsTag2_3[key] = 0;
+            });
+
+            // tanikeisan.htmlで保存された単位を読み込む
+            const calculationData = localStorage.getItem(calculationDataKey);
+            if (calculationData) {
+                const parsedCalcData = JSON.parse(calculationData);
+                for(const key in parsedCalcData.checkedNormalUnitsTag1) {
+                    normalUnitsTag1[key] = (parsedCalcData.checkedNormalUnitsTag1[key] || 0);
+                }
+                for(const key in parsedCalcData.checkedNormalUnitsTag2_3) {
+                    normalUnitsTag2_3[key] = (parsedCalcData.checkedNormalUnitsTag2_3[key] || 0);
+                }
+            }
+            
+            const major1Selected = document.getElementById('major1Select').value;
+            const major2Selected = document.getElementById('major2Select').value;
+            const majorTags = ['IS', 'NC', 'XD'];
+
+            const checkedRequiredTags = new Set();
+            const allRequiredTags = new Set(requiredTags);
+            const englishRequiredSubjects = new Set();
+            let englishRequiredTotalUnits = 0;
+            let johoShoriHisshuUnits = 0;
+
+            const generalHisshuSubjects = new Set();
+            const isHisshuSubjects = new Set();
+            let isSentakuHisshuUnits = 0;
+            let xdSentakuHisshuUnits = 0;
+            const ncHisshuSubjects = new Set();
+
+
+            allSubjects.forEach(subject => {
+                const checkboxIdPrefix = `chk-${subject.id}-`;
+                
+                // 単位計算ページでチェックされた項目は、シミュレーションでは加算しない
+                if (tanikeisanCheckedIds.has(checkboxIdPrefix + 'tag1') ||
+                    tanikeisanCheckedIds.has(checkboxIdPrefix + 'tag2') ||
+                    tanikeisanCheckedIds.has(checkboxIdPrefix + 'tag3') ||
+                    tanikeisanCheckedIds.has(checkboxIdPrefix + 'tag4')) {
+                    // 単位計算ページでチェックされた項目は、ここでは無視する
+                    return;
+                }
+
+                // 優先順位を付けてチェックされたタグを特定 (シミュレーション側でチェックされたもののみ)
+                let checkedTagKey = null;
+                if ((subject.tag2 || subject.tag3) && (checkedSubjectTags[checkboxIdPrefix + 'tag1'] || checkedSubjectTags[checkboxIdPrefix + 'tag2'] || checkedSubjectTags[checkboxIdPrefix + 'tag3'])) {
+                    checkedTagKey = checkedSubjectTags[checkboxIdPrefix + 'tag2'] ? 'tag2' : checkedSubjectTags[checkboxIdPrefix + 'tag3'] ? 'tag3' : 'tag1';
+                } else if (checkedSubjectTags[checkboxIdPrefix + 'tag1']) {
+                    checkedTagKey = 'tag1';
+                } else if (checkedSubjectTags[checkboxIdPrefix + 'tag4']) {
+                    checkedTagKey = 'tag4';
+                }
+
+                if (checkedTagKey) {
+                    const units = parseInt(subject['単位数']) || 0;
+                    const tagValue = subject[checkedTagKey];
+                    const tag4Value = subject.tag4;
+                    let category = tagToCategoryMap[tagValue];
+
+                    if (allRequiredTags.has(tagValue)) {
+                        if (tagValue === "英語必修") {
+                            englishRequiredSubjects.add(subject['科目名']);
+                            englishRequiredTotalUnits += units;
+                        } else {
+                            checkedRequiredTags.add(tagValue);
+                        }
+                    }
+
+                    if (tagValue === "情報処理必修") {
+                         johoShoriHisshuUnits += units;
+                    }
+                    
+                    if (tag4Value === "必修") {
+                        generalHisshuSubjects.add(subject.id);
+                    }
+                    if (tag4Value === "IS必修") {
+                        isHisshuSubjects.add(subject.id);
+                    }
+                    if (tag4Value === "IS選択必修") {
+                        isSentakuHisshuUnits += units;
+                    }
+                    if (tag4Value === "XD選択必修") {
+                        xdSentakuHisshuUnits += units;
+                    }
+                    if (tag4Value === "NC必修") {
+                        ncHisshuSubjects.add(subject.id);
+                    }
+
+                    if (majorTags.includes(tagValue)) {
+                        if (tagValue === major1Selected) {
+                            category = 'major1';
+                        } else if (tagValue === major2Selected) {
+                            category = 'major2';
+                        } else {
+                            category = 'otherMajor';
+                        }
+                    }
+                    
+                    // シミュレーションでの追加単位
+                    const isTag2or3 = (subject.tag2 || subject.tag3);
+                    if (isTag2or3 && checkedTagKey !== 'tag4') {
+                        if (simulatedUnitsTag2_3.hasOwnProperty(category)) simulatedUnitsTag2_3[category] += units;
+                    } else {
+                        if (simulatedUnitsTag1.hasOwnProperty(category)) simulatedUnitsTag1[category] += units;
+                    }
+                }
+            });
+
+            // 手動入力分は全てシミュレーション追加分 (tag1扱い) に加算
+            const manualUnits = {
+                kyoyo: parseInt(document.getElementById('manualKyoyoUnits').value) || 0,
+                kogakuKiso: parseInt(document.getElementById('manualKogakuKisoUnits').value) || 0,
+                johoKiso: parseInt(document.getElementById('manualJohoKisoUnits').value) || 0,
+                johoOyo: parseInt(document.getElementById('manualJohoOyoUnits').value) || 0,
+                major1: parseInt(document.getElementById('manualMajor1Units').value) || 0,
+                major2: parseInt(document.getElementById('manualMajor2Units').value) || 0,
+                otherMajor: parseInt(document.getElementById('manualOtherMajorUnits').value) || 0,
+                sotsuken: parseInt(document.getElementById('manualSotsukenUnits').value) || 0,
+                jiyuSentaku: parseInt(document.getElementById('manualJiyuSentakuUnits').value) || 0
             };
+            
+            for (const key in manualUnits) {
+                if (manualUnits.hasOwnProperty(key) && simulatedUnitsTag1.hasOwnProperty(key)) {
+                    simulatedUnitsTag1[key] += manualUnits[key];
+                }
+            }
+            
+            // 単位計算ページで取得済みの必須科目もチェック済みとして扱う
+            const calcData = JSON.parse(localStorage.getItem(calculationDataKey) || '{}');
+            const calcCheckedIds = Object.keys(calcData.checkedSubjects || {});
+            calcCheckedIds.forEach(id => {
+                const subjectId = id.substring(4, id.lastIndexOf('-'));
+                const subject = allSubjects.find(s => s.id === subjectId);
+                if (!subject) return;
 
-            const dataToSave = {
-                acquiredUnits: initialAcquiredUnitsFromStorage,
-                selectedMajors: selectedMajorsFromStorage,
-                plannedUnits: plannedUnits,
-                checkedPlannedSubjects: getCheckedPlannedSubjectsState(),
-                currentSimulationFilter: currentSimulationFilter
-            };
-            localStorage.setItem('tanisimulationData', JSON.stringify(dataToSave));
-            console.log('シミュレーションデータとチェック状態をローカルストレージに保存しました:', dataToSave);
+                const tagKey = id.split('-').pop();
+                const tagValue = subject[tagKey];
+                if (allRequiredTags.has(tagValue)) {
+                    if (tagValue === "英語必修") {
+                        englishRequiredSubjects.add(subject['科目名']);
+                        englishRequiredTotalUnits += parseInt(subject['単位数']) || 0;
+                    } else {
+                        checkedRequiredTags.add(tagValue);
+                    }
+                }
+                if (tagValue === "情報処理必修") {
+                    johoShoriHisshuUnits += parseInt(subject['単位数']) || 0;
+                }
+                if (subject.tag4 === "必修") {
+                    generalHisshuSubjects.add(subject.id);
+                }
+                if (subject.tag4 === "IS必修") {
+                    isHisshuSubjects.add(subject.id);
+                }
+                if (subject.tag4 === "IS選択必修") {
+                    isSentakuHisshuUnits += parseInt(subject['単位数']) || 0;
+                }
+                if (subject.tag4 === "XD選択必修") {
+                    xdSentakuHisshuUnits += parseInt(subject['単位数']) || 0;
+                }
+                if (subject.tag4 === "NC必修") {
+                    ncHisshuSubjects.add(subject.id);
+                }
+            });
 
 
-            const results = calculateUnitsForSimulation(initialUnits, plannedUnits);
+            const totalAcquiredUnits = {};
+            for (const key in targetUnits) {
+                totalAcquiredUnits[key] = (normalUnitsTag1[key] || 0) + (normalUnitsTag2_3[key] || 0) + (simulatedUnitsTag1[key] || 0) + (simulatedUnitsTag2_3[key] || 0);
+            }
 
-            document.getElementById('finalKyoyo').textContent = Math.min(results.currentAcquired.kyoyo, targetUnits.kyoyo);
-            document.getElementById('finalKogakuKiso').textContent = Math.min(results.currentAcquired.kogakuKiso, targetUnits.kogakuKiso);
-            document.getElementById('finalJohoKiso').textContent = Math.min(results.currentAcquired.johoKiso, targetUnits.johoKiso);
-            document.getElementById('finalJohoOyo').textContent = Math.min(results.currentAcquired.johoOyo, targetUnits.johoOyo);
-            document.getElementById('finalMajor1').textContent = Math.min(results.currentAcquired.major1, targetUnits.major1);
-            document.getElementById('finalMajor2').textContent = Math.min(results.currentAcquired.major2, targetUnits.major2);
-            document.getElementById('finalOtherMajor').textContent = Math.min(results.currentAcquired.otherMajor, targetUnits.otherMajor);
-            document.getElementById('finalSotsuken').textContent = Math.min(results.currentAcquired.sotsuken, targetUnits.sotsuken);
-            document.getElementById('finalJiyuSentaku').textContent = Math.min(results.currentAcquired.jiyuSentaku, targetUnits.jiyuSentaku);
+            const requiredWarningElement = document.getElementById('requiredWarning');
+            let isAllRequiredChecked = true;
+            let warningMessage = "";
 
+            requiredTags.filter(tag => tag !== "英語必修" && tag !== "情報処理必修").forEach(tag => {
+                if (!checkedRequiredTags.has(tag)) {
+                    isAllRequiredChecked = false;
+                    warningMessage += `・${tag}が履修できていません。\n`;
+                }
+            });
+            const englishRequiredCourses = ["英語Ⅰ／EnglishⅠ", "英語Ⅱ／EnglishⅡ", "英語Ⅲ／EnglishⅢ", "英語Ⅳ／EnglishⅣ"];
+            const hasAllEnglishCourses = englishRequiredCourses.every(course => englishRequiredSubjects.has(course));
+            if (englishRequiredTotalUnits < 8 || !hasAllEnglishCourses) {
+                isAllRequiredChecked = false;
+                warningMessage += `・英語必修の8単位が取得できていません。\n`;
+            }
+            if (johoShoriHisshuUnits < 4) {
+                 isAllRequiredChecked = false;
+                 warningMessage += `・情報処理必修の4単位が取得できていません。\n`;
+            }
+            const checkedGeneralHisshuSubjects = allSubjects.filter(subject => {
+                const isChecked = ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`] || tanikeisanCheckedIds.has(`chk-${subject.id}-${tagKey}`));
+                return (subject.tag4 === "必修" && isChecked);
+            });
+            const allGeneralHisshuSubjects = allSubjects.filter(subject => subject.tag4 === "必修");
+            if (checkedGeneralHisshuSubjects.length !== allGeneralHisshuSubjects.length) {
+                isAllRequiredChecked = false;
+                warningMessage += `メジャー必修科目が履修できていません。\n`;
+            }
+
+            if (major1Selected === 'IS' || major2Selected === 'IS') {
+                const checkedISHisshuSubjects = allSubjects.filter(subject => {
+                    const isChecked = ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`] || tanikeisanCheckedIds.has(`chk-${subject.id}-${tagKey}`));
+                    return (subject.tag4 === "IS必修" && isChecked);
+                });
+                const allISHisshuSubjects = allSubjects.filter(subject => subject.tag4 === "IS必修");
+                if (checkedISHisshuSubjects.length !== allISHisshuSubjects.length) {
+                    isAllRequiredChecked = false;
+                    warningMessage += `・IS必修科目が履修できていません。\n`;
+                }
+                const checkedISSentakuHisshuUnits = allSubjects.filter(subject => {
+                    const isChecked = ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`] || tanikeisanCheckedIds.has(`chk-${subject.id}-${tagKey}`));
+                    return (subject.tag4 === "IS選択必修" && isChecked);
+                }).reduce((sum, subject) => sum + (parseInt(subject['単位数']) || 0), 0);
+                if (checkedISSentakuHisshuUnits < 3) {
+                    isAllRequiredChecked = false;
+                    warningMessage += `・IS選択必修の3単位が取得できていません。\n`;
+                }
+            }
+            if (major1Selected === 'NC' || major2Selected === 'NC') {
+                const checkedNCHisshuSubjects = allSubjects.filter(subject => {
+                    const isChecked = ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`] || tanikeisanCheckedIds.has(`chk-${subject.id}-${tagKey}`));
+                    return (subject.tag4 === "NC必修" && isChecked);
+                });
+                const allNCHisshuSubjects = allSubjects.filter(subject => subject.tag4 === "NC必修");
+                if (checkedNCHisshuSubjects.length !== allNCHisshuSubjects.length) {
+                    isAllRequiredChecked = false;
+                    warningMessage += `・NC必修科目が履修できていません。\n`;
+                }
+            }
+            if (major1Selected === 'XD' || major2Selected === 'XD') {
+                const checkedXDSentakuHisshuUnits = allSubjects.filter(subject => {
+                    const isChecked = ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`] || tanikeisanCheckedIds.has(`chk-${subject.id}-${tagKey}`));
+                    return (subject.tag4 === "XD選択必修" && isChecked);
+                }).reduce((sum, subject) => sum + (parseInt(subject['単位数']) || 0), 0);
+                if (checkedXDSentakuHisshuUnits < 2) {
+                    isAllRequiredChecked = false;
+                    warningMessage += `・XD選択必修の2単位が取得できていません。\n`;
+                }
+            }
+
+
+            if (!isAllRequiredChecked) {
+                requiredWarningElement.style.display = 'block';
+                requiredWarningElement.textContent = `以下の必修科目を満たしていません:\n${warningMessage}`;
+            } else {
+                requiredWarningElement.style.display = 'none';
+            }
+
+
+            const results = calculateAcquiredUnits(totalAcquiredUnits);
+
+            document.getElementById('acquiredKyoyo').textContent = Math.min(results.actualAcquired.kyoyo, targetUnits.kyoyo);
+            document.getElementById('remainingKyoyo').textContent = results.kyoyo;
             document.getElementById('targetKyoyo').textContent = targetUnits.kyoyo;
+
+            document.getElementById('acquiredKogakuKiso').textContent = Math.min(results.actualAcquired.kogakuKiso, targetUnits.kogakuKiso);
+            document.getElementById('remainingKogakuKiso').textContent = results.kogakuKiso;
             document.getElementById('targetKogakuKiso').textContent = targetUnits.kogakuKiso;
+
+            document.getElementById('acquiredJohoKiso').textContent = Math.min(results.actualAcquired.johoKiso, targetUnits.johoKiso);
+            document.getElementById('remainingJohoKiso').textContent = results.johoKiso;
             document.getElementById('targetJohoKiso').textContent = targetUnits.johoKiso;
+
+            document.getElementById('acquiredJohoOyo').textContent = Math.min(results.actualAcquired.johoOyo, targetUnits.johoOyo);
+            document.getElementById('remainingJohoOyo').textContent = results.johoOyo;
             document.getElementById('targetJohoOyo').textContent = targetUnits.johoOyo;
+
+            document.getElementById('acquiredMajor1').textContent = Math.min(results.actualAcquired.major1, targetUnits.major1);
+            document.getElementById('remainingMajor1').textContent = results.major1;
             document.getElementById('targetMajor1').textContent = targetUnits.major1;
+
+            document.getElementById('acquiredMajor2').textContent = Math.min(results.actualAcquired.major2, targetUnits.major2);
+            document.getElementById('remainingMajor2').textContent = results.major2;
             document.getElementById('targetMajor2').textContent = targetUnits.major2;
+
+            document.getElementById('acquiredOtherMajor').textContent = Math.min(results.actualAcquired.otherMajor, targetUnits.otherMajor);
+            document.getElementById('remainingOtherMajor').textContent = results.otherMajor;
             document.getElementById('targetOtherMajor').textContent = targetUnits.otherMajor;
+
+            document.getElementById('acquiredSotsuken').textContent = Math.min(results.actualAcquired.sotsuken, targetUnits.sotsuken);
+            document.getElementById('remainingSotsuken').textContent = results.sotsuken;
             document.getElementById('targetSotsuken').textContent = targetUnits.sotsuken;
+
+            document.getElementById('acquiredJiyuSentaku').textContent = Math.min(results.actualAcquired.jiyuSentaku, targetUnits.jiyuSentaku);
+            document.getElementById('remainingJiyuSentaku').textContent = results.jiyuSentaku;
             document.getElementById('targetJiyuSentaku').textContent = targetUnits.jiyuSentaku;
 
             document.getElementById('totalTarget').textContent = results.totalTargetUnits;
-            document.getElementById('totalSimulatedAcquired').textContent = results.totalAcquired;
-            document.getElementById('totalSimulatedRemaining').textContent = results.totalRemaining;
+            document.getElementById('totalAcquired').textContent = results.totalAcquired;
+            document.getElementById('totalRemaining').textContent = results.totalRemaining;
 
-            updateSimulatedChart(results.finalCategoryAcquired);
+            updateChart(normalUnitsTag1, normalUnitsTag2_3, simulatedUnitsTag1, simulatedUnitsTag2_3);
+            saveDataToLocalStorage();
         }
 
-        function updateSimulatedChart(data) {
+        function updateChart(normalTag1, normalTag2_3, simulatedTag1, simulatedTag2_3) {
             const ctx = document.getElementById('unitStatusChart').getContext('2d');
             const labels = Object.keys(targetUnits).map(key => {
                 switch(key) {
@@ -523,8 +688,8 @@
                     case 'kogakuKiso': return '工学基礎科目';
                     case 'johoKiso': return '情報基礎科目';
                     case 'johoOyo': return '情報応用科目';
-                    case 'major1': return `第1メジャー科目 (${selectedMajorsFromStorage.major1})`;
-                    case 'major2': return `第2メジャー科目 (${selectedMajorsFromStorage.major2})`;
+                    case 'major1': return `第1メジャー科目 (${document.getElementById('major1Select').value})`;
+                    case 'major2': return `第2メジャー科目 (${document.getElementById('major2Select').value})`;
                     case 'otherMajor': return 'その他メジャー科目';
                     case 'sotsuken': return '卒業研究';
                     case 'jiyuSentaku': return '自由選択科目';
@@ -532,34 +697,48 @@
                 }
             });
             
-            const acquiredData = Object.keys(targetUnits).map(key => {
-                return data[key];
-            });
+            const normalDataTag1 = Object.keys(targetUnits).map(key => normalTag1[key] || 0);
+            const normalDataTag2_3 = Object.keys(targetUnits).map(key => normalTag2_3[key] || 0);
+            const simulatedDataTag1 = Object.keys(targetUnits).map(key => simulatedTag1[key] || 0);
+            const simulatedDataTag2_3 = Object.keys(targetUnits).map(key => simulatedTag2_3[key] || 0);
 
-            const targetData = Object.keys(targetUnits).map(key => {
-                return targetUnits[key];
-            });
 
-            if (tanisimulationChart) {
-                tanisimulationChart.destroy();
+            if (unitStatusChart) {
+                unitStatusChart.destroy();
             }
 
-            tanisimulationChart = new Chart(ctx, {
+            unitStatusChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '目標単位数',
-                        data: targetData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'シミュレーション後の取得単位数',
-                        data: acquiredData,
+                        label: '取得済み (Tag1)',
+                        data: normalDataTag1,
                         backgroundColor: 'rgba(75, 192, 192, 0.8)',
                         borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        stack: 'total'
+                    }, {
+                        label: '取得済み (Tag2/Tag3)',
+                        data: normalDataTag2_3,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        stack: 'total'
+                    }, {
+                        label: 'シミュレーション (Tag1)',
+                        data: simulatedDataTag1,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        stack: 'total'
+                    }, {
+                        label: 'シミュレーション (Tag2/Tag3)',
+                        data: simulatedDataTag2_3,
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        stack: 'total'
                     }]
                 },
                 options: {
@@ -568,6 +747,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: {
+                            stacked: true,
                             beginAtZero: true,
                             title: {
                                 display: true,
@@ -575,31 +755,37 @@
                             },
                             ticks: {
                                 stepSize: 1
-                            },
-                            max: Math.max(...targetData) + 2
+                            }
                         },
                         y: {
-                            stacked: false
+                            stacked: true,
+                            barPercentage: 0.9,
+                            categoryPercentage: 0.9
                         }
                     },
                     plugins: {
                         tooltip: {
                             callbacks: {
+                                title: function(context) {
+                                    const categoryKey = Object.keys(targetUnits)[context[0].dataIndex];
+                                    const target = targetUnits[categoryKey];
+                                    const label = labels[context[0].dataIndex];
+                                    return `${label} (目標: ${target}単位)`;
+                                },
                                 label: function(context) {
                                     let label = context.dataset.label || '';
                                     if (label) {
                                         label += ': ';
                                     }
                                     const value = context.parsed.x;
-                                    const categoryKey = Object.keys(targetUnits)[context.dataIndex];
+                                    return label + value + '単位';
+                                },
+                                afterBody: function(context) {
+                                    const categoryKey = Object.keys(targetUnits)[context[0].dataIndex];
                                     const target = targetUnits[categoryKey];
-                                    
-                                    if (context.dataset.label === '目標単位数') {
-                                        return label + value + '単位';
-                                    } else {
-                                        const remaining = Math.max(0, target - value);
-                                        return label + value + '単位 (残り: ' + remaining + '単位)';
-                                    }
+                                    const totalAcquired = (normalTag1[categoryKey] || 0) + (normalTag2_3[categoryKey] || 0) + (simulatedTag1[categoryKey] || 0) + (simulatedTag2_3[categoryKey] || 0);
+                                    const remaining = Math.max(0, target - totalAcquired);
+                                    return '合計: ' + totalAcquired + '単位, 残り: ' + remaining + '単位';
                                 }
                             }
                         }
@@ -608,13 +794,30 @@
             });
         }
 
-        // 科目データをFirebaseから読み込み、表示する関数
-        function loadSubjectsForSimulation() {
+
+        function handleCheckboxChange(changedCheckbox) {
+            const subjectId = changedCheckbox.dataset.subjectId;
+            const checkboxId = changedCheckbox.id;
+
+            if (changedCheckbox.checked) {
+                document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`).forEach(checkbox => {
+                    if (checkbox !== changedCheckbox) {
+                        checkbox.checked = false;
+                        delete checkedSubjectTags[checkbox.id];
+                    }
+                });
+                checkedSubjectTags[checkboxId] = true;
+            } else {
+                delete checkedSubjectTags[checkboxId];
+            }
+            updateCalculations();
+        }
+
+        function loadSubjects() {
             const subjectsRef = database.ref('syllabus_subjects');
             subjectsRef.on('value', (snapshot) => {
                 const subjectsData = snapshot.val();
                 allSubjects = [];
-
                 if (subjectsData) {
                     allSubjects = Object.keys(subjectsData).map(key => ({
                         id: key,
@@ -623,83 +826,45 @@
                 } else {
                     console.warn('科目データがありません。');
                 }
-                restoreSimulationSavedState(); // フィルターとチェックボックスの状態を復元
-                displaySubjectsByFilterSimulation(currentSimulationFilter); // 読み込み後、現在のフィルターで表示
+                restoreSavedState();
+                displaySubjectsByFilter(currentFilter);
             }, (error) => {
                 console.error("Firebaseから科目データの読み込みに失敗しました:", error);
                 alert("科目データの読み込みに失敗しました。インターネット接続を確認してください。");
             });
         }
 
-        // 修正: シミュレーション側でも単一選択にする
-        function handlePlannedCheckboxChange(changedCheckbox) {
-            if (changedCheckbox.checked) {
-                const subjectId = changedCheckbox.dataset.subjectId;
-                document.querySelectorAll(`input[type="checkbox"][data-subject-id="${subjectId}"]`).forEach(checkbox => {
-                    if (checkbox !== changedCheckbox) {
-                        checkbox.checked = false;
-                    }
-                });
+        function displaySubjectsByFilter(filter) {
+            currentFilter = filter;
+            const subjectListDiv = document.getElementById('subjectList');
+            subjectListDiv.innerHTML = '';
+            
+            const calculationData = localStorage.getItem(calculationDataKey);
+            tanikeisanCheckedIds.clear(); // 既存データをクリア
+            tanikeisanManualUnits = {}; // 既存データをクリア
+            if (calculationData) {
+                const parsedCalcData = JSON.parse(calculationData);
+                for (const key in parsedCalcData.checkedSubjects) {
+                    tanikeisanCheckedIds.add(key);
+                }
+                tanikeisanManualUnits = parsedCalcData.manualUnits || {};
             }
-            applyPlannedSubjects(); // ★重要: チェックボックスの変更時に自動的に再計算
-        }
+            
+            // 単位計算ページの手動入力欄を、シミュレーションページの手動入力欄に反映させる
+            if (tanikeisanManualUnits) {
+                document.getElementById('manualKyoyoUnits').value = tanikeisanManualUnits.kyoyo || 0;
+                document.getElementById('manualKogakuKisoUnits').value = tanikeisanManualUnits.kogakuKiso || 0;
+                document.getElementById('manualJohoKisoUnits').value = tanikeisanManualUnits.johoKiso || 0;
+                document.getElementById('manualJohoOyoUnits').value = tanikeisanManualUnits.johoOyo || 0;
+                document.getElementById('manualMajor1Units').value = tanikeisanManualUnits.major1 || 0;
+                document.getElementById('manualMajor2Units').value = tanikeisanManualUnits.major2 || 0;
+                document.getElementById('manualOtherMajorUnits').value = tanikeisanManualUnits.otherMajor || 0;
+                document.getElementById('manualSotsukenUnits').value = tanikeisanManualUnits.sotsuken || 0;
+                document.getElementById('manualJiyuSentakuUnits').value = tanikeisanManualUnits.jiyuSentaku || 0;
+            }
 
-        // シミュレーションで計画されている科目の合計単位を計算し、入力フィールドを更新
-        function applyPlannedSubjects() {
-            let tempPlannedUnits = {
-                kyoyo: 0, kogakuKiso: 0, johoKiso: 0, johoOyo: 0,
-                major1: 0, major2: 0, otherMajor: 0, sotsuken: 0, jiyuSentaku: 0
-            };
 
-            const major1Selected = selectedMajorsFromStorage.major1;
-            const major2Selected = selectedMajorsFromStorage.major2;
-            const majorTags = ['IS', 'NC', 'XD']; // すべてのメジャー関連タグ
-
-            // 現在チェックされているすべての科目から単位を加算
-            document.querySelectorAll('input[type="checkbox"][id^="sim-chk-"]:checked').forEach(checkbox => {
-                const tag = checkbox.dataset.tag;
-                const units = parseInt(checkbox.dataset.units) || 0; 
-
-                let category = tagToCategoryMap[tag];
-
-                if (majorTags.includes(tag)) {
-                    if (tag === major1Selected) {
-                        category = 'major1';
-                    } else if (tag === major2Selected) {
-                        category = 'major2';
-                    } else {
-                        category = 'otherMajor';
-                    }
-                }
-
-                if (tempPlannedUnits.hasOwnProperty(category)) {
-                    tempPlannedUnits[category] += units;
-                } else {
-                    console.warn(`不明なカテゴリ: ${category} (タグ: ${tag})`);
-                }
-            });
-
-            document.getElementById('planKyoyoUnits').value = tempPlannedUnits.kyoyo;
-            document.getElementById('planKogakuKisoUnits').value = tempPlannedUnits.kogakuKiso;
-            document.getElementById('planJohoKisoUnits').value = tempPlannedUnits.johoKiso;
-            document.getElementById('planJohoOyoUnits').value = tempPlannedUnits.johoOyo;
-            document.getElementById('planMajor1Units').value = tempPlannedUnits.major1;
-            document.getElementById('planMajor2Units').value = tempPlannedUnits.major2;
-            document.getElementById('planOtherMajorUnits').value = tempPlannedUnits.otherMajor;
-            document.getElementById('planSotsukenUnits').value = tempPlannedUnits.sotsuken;
-            document.getElementById('planJiyuSentakuUnits').value = tempPlannedUnits.jiyuSentaku;
-
-            updateSimulation(); // チェックボックスの変更時にシミュレーションを更新
-        }
-
-        // 選択された曜限の科目を表示する関数（シミュレーション用）
-        function displaySubjectsByFilterSimulation(filter) {
-            currentSimulationFilter = filter;
-            const subjectListDiv = document.getElementById('subjectListSimulation');
-            subjectListDiv.innerHTML = ''; // リストをクリア
-
-            // アクティブなボタンを更新
-            document.querySelectorAll('#timetableTabsSimulation button').forEach(button => {
+            document.querySelectorAll('.timetable-tabs button').forEach(button => {
                 if (button.dataset.filter === filter) {
                     button.classList.add('active');
                 } else {
@@ -710,11 +875,10 @@
             let filteredSubjects = [];
 
             if (filter === '他／Otr') {
-                const standardTimeSlots = allTimeSlots.slice(0, -1); // '他／Otr'を除く標準的な曜限
-
+                const standardTimeSlots = allTimeSlots.slice(0, -1);
                 filteredSubjects = allSubjects.filter(subject => {
                     const yougen = subject['曜限'];
-                    if (!yougen) return true; // 曜限が未定義・null・空の場合も「その他」に含める
+                    if (!yougen) return true;
                     
                     if (Array.isArray(yougen)) {
                         const containsOtr = yougen.includes('他／Otr');
@@ -725,9 +889,8 @@
                     }
                     return false;
                 });
-
+                
             } else {
-                // 通常の曜限フィルター
                 filteredSubjects = allSubjects.filter(subject => {
                     const yougen = subject['曜限'];
                     if (Array.isArray(yougen)) {
@@ -744,10 +907,30 @@
                 itemDiv.classList.add('subject-item');
                 itemDiv.dataset.subjectId = subject.id;
 
-                const tag1Content = subject.tag1 ? `<div>${subject.tag1}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag1" data-tag="${subject.tag1}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
-                const tag2Content = subject.tag2 ? `<div>${subject.tag2}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag2" data-tag="${subject.tag2}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
-                const tag3Content = subject.tag3 ? `<div>${subject.tag3}</div><div><input type="checkbox" id="sim-chk-${subject.id}-tag3" data-tag="${subject.tag3}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handlePlannedCheckboxChange(this)"></div>` : `<div></div><div></div>`;
-                
+                const tag1CheckboxId = `chk-${subject.id}-tag1`;
+                const tag2CheckboxId = `chk-${subject.id}-tag2`;
+                const tag3CheckboxId = `chk-${subject.id}-tag3`;
+                const tag4CheckboxId = `chk-${subject.id}-tag4`;
+
+                const isTag1Acquired = tanikeisanCheckedIds.has(tag1CheckboxId);
+                const isTag2Acquired = tanikeisanCheckedIds.has(tag2CheckboxId);
+                const isTag3Acquired = tanikeisanCheckedIds.has(tag3CheckboxId);
+                const isTag4Acquired = tanikeisanCheckedIds.has(tag4CheckboxId);
+
+                const tag1Disabled = isTag1Acquired ? 'disabled' : '';
+                const tag2Disabled = isTag2Acquired ? 'disabled' : '';
+                const tag3Disabled = isTag3Acquired ? 'disabled' : '';
+                const tag4Disabled = isTag4Acquired ? 'disabled' : '';
+
+                const tag1Checked = isTag1Acquired || checkedSubjectTags[tag1CheckboxId] ? 'checked' : '';
+                const tag2Checked = isTag2Acquired || checkedSubjectTags[tag2CheckboxId] ? 'checked' : '';
+                const tag3Checked = isTag3Acquired || checkedSubjectTags[tag3CheckboxId] ? 'checked' : '';
+                const tag4Checked = isTag4Acquired || checkedSubjectTags[tag4CheckboxId] ? 'checked' : '';
+
+                const tag1Content = subject.tag1 ? `<div>${subject.tag1}</div><div><input type="checkbox" id="${tag1CheckboxId}" data-tag="${subject.tag1}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)" ${tag1Disabled} ${tag1Checked}></div>` : `<div></div><div></div>`;
+                const tag2Content = subject.tag2 ? `<div>${subject.tag2}</div><div><input type="checkbox" id="${tag2CheckboxId}" data-tag="${subject.tag2}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)" ${tag2Disabled} ${tag2Checked}></div>` : `<div></div><div></div>`;
+                const tag3Content = subject.tag3 ? `<div>${subject.tag3}</div><div><input type="checkbox" id="${tag3CheckboxId}" data-tag="${subject.tag3}" data-units="${subject['単位数']}" data-subject-id="${subject.id}" onchange="handleCheckboxChange(this)" ${tag3Disabled} ${tag3Checked}></div>` : `<div></div><div></div>`;
+
                 itemDiv.innerHTML = `
                     ${tag1Content}
                     ${tag2Content}
@@ -758,97 +941,89 @@
                 `;
                 subjectListDiv.appendChild(itemDiv);
             });
-            restoreCheckedPlannedSubjectsState(); // 復元されたチェックボックスの状態を適用
+            updateCalculations();
         }
 
-        // 時間割タブを生成する関数（シミュレーション用）
-        function createTimetableTabsSimulation() {
-            const timetableTabsDiv = document.getElementById('timetableTabsSimulation');
-            timetableTabsDiv.innerHTML = ''; // クリア
+        function createTimetableTabs() {
+            const timetableTabsDiv = document.getElementById('timetableTabs');
+            timetableTabsDiv.innerHTML = '';
 
             allTimeSlots.forEach(slot => {
                 const button = document.createElement('button');
-                // データベース表記の "月／Mon　1" を "月/Mon 1" のように表示
-                // ここで全角スペースを半角スペースに変換して表示
-                button.textContent = slot.replace('／', '/').replace('Mon', '月').replace('Tue', '火').replace('Wed', '水').replace('Thu', '木').replace('Fri', '金').replace('Otr', 'その他').replace('　', ' '); 
+                button.textContent = slot.replace('／', '/').replace('Mon', '月').replace('Tue', '火').replace('Wed', '水').replace('Thu', '木').replace('Fri', '金').replace('Otr', 'その他').replace('　', ' ');
                 button.dataset.filter = slot;
-                button.onclick = () => displaySubjectsByFilterSimulation(slot);
+                button.onclick = () => displaySubjectsByFilter(slot);
                 timetableTabsDiv.appendChild(button);
             });
         }
-        
-        // tanikeisan.htmlから単位データを読み込む関数
-        function loadInitialAcquiredUnits() {
-            const savedData = localStorage.getItem('tanikeisanData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                initialAcquiredUnitsFromStorage = parsedData.acquiredUnits || {};
-                selectedMajorsFromStorage = parsedData.selectedMajors || { major1: 'IS', major2: 'IS' };
 
-                document.getElementById('displayInitialKyoyoUnits').textContent = initialAcquiredUnitsFromStorage.kyoyo || 0;
-                document.getElementById('displayInitialKogakuKisoUnits').textContent = initialAcquiredUnitsFromStorage.kogakuKiso || 0;
-                document.getElementById('displayInitialJohoKisoUnits').textContent = initialAcquiredUnitsFromStorage.johoKiso || 0;
-                document.getElementById('displayInitialJohoOyoUnits').textContent = initialAcquiredUnitsFromStorage.johoOyo || 0;
-                document.getElementById('displayInitialMajor1Units').textContent = initialAcquiredUnitsFromStorage.major1 || 0;
-                document.getElementById('displayInitialMajor2Units').textContent = initialAcquiredUnitsFromStorage.major2 || 0;
-                document.getElementById('displayInitialOtherMajorUnits').textContent = initialAcquiredUnitsFromStorage.otherMajor || 0;
-                document.getElementById('displayInitialSotsukenUnits').textContent = initialAcquiredUnitsFromStorage.sotsuken || 0;
-                document.getElementById('displayInitialJiyuSentakuUnits').textContent = initialAcquiredUnitsFromStorage.jiyuSentaku || 0;
-                
-                updateDisplayMajorLabelsAndTargets(); // メジャーラベルと目標単位を更新
-            } else {
-                console.warn('tanikeisanData がローカルストレージに見つかりませんでした。初期値を使用します。');
-            }
+
+        function saveDataToLocalStorage() {
+            const major1Selected = document.getElementById('major1Select').value;
+            const major2Selected = document.getElementById('major2Select').value;
+            const manualUnits = {
+                kyoyo: parseInt(document.getElementById('manualKyoyoUnits').value) || 0,
+                kogakuKiso: parseInt(document.getElementById('manualKogakuKisoUnits').value) || 0,
+                johoKiso: parseInt(document.getElementById('manualJohoKisoUnits').value) || 0,
+                johoOyo: parseInt(document.getElementById('manualJohoOyoUnits').value) || 0,
+                major1: parseInt(document.getElementById('manualMajor1Units').value) || 0,
+                major2: parseInt(document.getElementById('manualMajor2Units').value) || 0,
+                otherMajor: parseInt(document.getElementById('manualOtherMajorUnits').value) || 0,
+                sotsuken: parseInt(document.getElementById('manualSotsukenUnits').value) || 0,
+                jiyuSentaku: parseInt(document.getElementById('manualJiyuSentakuUnits').value) || 0
+            };
+            
+            const dataToSave = {
+                major1: major1Selected,
+                major2: major2Selected,
+                manualUnits: manualUnits,
+                checkedSubjects: checkedSubjectTags,
+                selectedMajors: {
+                    major1: major1Selected,
+                    major2: major2Selected
+                },
+                currentFilter: currentFilter
+            };
+            localStorage.setItem(simulationDataKey, JSON.stringify(dataToSave));
+            console.log('シミュレーションデータをローカルストレージに保存しました:', dataToSave);
         }
-        
-        // シミュレーションデータの復元
-        function restoreSimulationSavedState() {
-            const savedData = localStorage.getItem('tanisimulationData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                if (parsedData.plannedUnits) {
-                    document.getElementById('planKyoyoUnits').value = parsedData.plannedUnits.kyoyo || 0;
-                    document.getElementById('planKogakuKisoUnits').value = parsedData.plannedUnits.kogakuKiso || 0;
-                    document.getElementById('planJohoKisoUnits').value = parsedData.plannedUnits.johoKiso || 0;
-                    document.getElementById('planJohoOyoUnits').value = parsedData.plannedUnits.johoOyo || 0;
-                    document.getElementById('planMajor1Units').value = parsedData.plannedUnits.major1 || 0;
-                    document.getElementById('planMajor2Units').value = parsedData.plannedUnits.major2 || 0;
-                    document.getElementById('planOtherMajorUnits').value = parsedData.plannedUnits.otherMajor || 0;
-                    document.getElementById('planSotsukenUnits').value = parsedData.plannedUnits.sotsuken || 0;
-                    document.getElementById('planJiyuSentakuUnits').value = parsedData.plannedUnits.jiyuSentaku || 0;
+
+        function restoreSavedState() {
+            const simulationData = localStorage.getItem(simulationDataKey);
+            if (simulationData) {
+                const parsedSimData = JSON.parse(simulationData);
+
+                document.getElementById('major1Select').value = parsedSimData.major1 || 'IS';
+                document.getElementById('major2Select').value = parsedSimData.major2 || 'IS';
+
+                if (parsedSimData.manualUnits) {
+                    document.getElementById('manualKyoyoUnits').value = parsedSimData.manualUnits.kyoyo || 0;
+                    document.getElementById('manualKogakuKisoUnits').value = parsedSimData.manualUnits.kogakuKiso || 0;
+                    document.getElementById('manualJohoKisoUnits').value = parsedSimData.manualUnits.johoKiso || 0;
+                    document.getElementById('manualJohoOyoUnits').value = parsedSimData.manualUnits.johoOyo || 0;
+                    document.getElementById('manualMajor1Units').value = parsedSimData.manualUnits.major1 || 0;
+                    document.getElementById('manualMajor2Units').value = parsedSimData.manualUnits.major2 || 0;
+                    document.getElementById('manualOtherMajorUnits').value = parsedSimData.manualUnits.otherMajor || 0;
+                    document.getElementById('manualSotsukenUnits').value = parsedSimData.manualUnits.sotsuken || 0;
+                    document.getElementById('manualJiyuSentakuUnits').value = parsedSimData.manualUnits.jiyuSentaku || 0;
                 }
-                currentSimulationFilter = parsedData.currentSimulationFilter || '月／Mon　1'; // フィルター状態を復元 (全角スペースに修正)
+
+                checkedSubjectTags = parsedSimData.checkedSubjects || {};
+                currentFilter = parsedSimData.currentFilter || '月／Mon　1';
+
+            } else {
+                const calculationData = localStorage.getItem(calculationDataKey);
+                if (calculationData) {
+                    const parsedCalcData = JSON.parse(calculationData);
+                    document.getElementById('major1Select').value = parsedCalcData.major1 || 'IS';
+                    document.getElementById('major2Select').value = parsedCalcData.major2 || 'IS';
+                }
             }
-            // チェックボックスの状態はdisplaySubjectsByFilterSimulationの後にrestoreCheckedPlannedSubjectsStateで適用
         }
 
-        // チェックボックスの状態をローカルストレージから復元する関数（シミュレーション用）
-        function restoreCheckedPlannedSubjectsState() {
-            const savedData = localStorage.getItem('tanisimulationData');
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                const checkedPlannedSubjects = parsedData.checkedPlannedSubjects || {};
-                
-                // すべての科目データの中から、保存されたIDを持つチェックボックスを特定し、状態を復元
-                allSubjects.forEach(subject => {
-                    ['tag1', 'tag2', 'tag3'].forEach(tagKey => {
-                        const checkboxId = `sim-chk-${subject.id}-${tagKey}`;
-                        const checkbox = document.getElementById(checkboxId);
-                        if (checkbox) {
-                            checkbox.checked = !!checkedPlannedSubjects[checkbox.id];
-                        }
-                    });
-                });
-            }
-            applyPlannedSubjects(); // 復元後にシミュレーションを更新
-        }
-
-
-        // 初期ロード時の処理
         document.addEventListener('DOMContentLoaded', () => {
-            loadInitialAcquiredUnits(); // 前ページからの単位とメジャー情報をロード
-            createTimetableTabsSimulation(); // 時間割タブの生成
-            loadSubjectsForSimulation(); // シミュレーション用科目リストの読み込みと表示
+            createTimetableTabs();
+            loadSubjects();
         });
 
     </script>

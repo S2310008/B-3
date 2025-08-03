@@ -1,0 +1,492 @@
+/* 基本スタイル */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff; /* 背景色: 白 */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+}
+
+.legend-container {
+  display: flex; /* 横並び */
+  justify-content: center; /* 中央揃え */
+  flex-wrap: wrap; /* 折り返し */
+  gap: 20px; /* 項目間の隙間 */
+  margin-top: 25px; /* 上のマップとの余白 */
+  padding: 15px;
+  max-width: 800px;
+  /* border: 1px solid #eee; */
+  border-radius: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dddddd;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.legend-label {
+  font-size: 0.9em;
+}
+
+.map-container {
+    max-width: 1400px;
+    width: 100%; /* 親要素の幅に合わせる */
+    box-sizing: border-box; /* paddingを幅計算に含める */
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* メジャー選択 */
+.major-selector {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e6f7ff;
+    border-radius: 5px;
+    border: 1px solid #cceeff;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.major-selector label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #0056b3;
+}
+.major-selector select {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid #007bff;
+    font-size: 1em;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%20197.8L145.2%2048.7%203.2%20197.8c-4.6%204.6-12%204.6-16.6%200l-16.6-16.6c-4.6-4.6-4.6-12%200-16.6l155.4-155.4c4.6-4.6%2012-4.6%2016.6%200l155.4%20155.4c4.6%204.6%204.6%2012%200%2016.6l-16.6%2016.6c-4.6%204.7-12%204.7-16.6.1z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%;
+    background-size: 0.65em auto;
+    padding-right: 2.5em;
+}
+
+
+/* グリッド定義 */
+.curriculum-map-grid {
+    display: grid;
+    /* grid-template-columns: 60px 60px repeat(12, minmax(65px, 1fr)); */
+    /* gap: 3px; */
+    grid-template-columns: 4vw 4vw repeat(12, 1fr);
+    gap: 2px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    overflow-x: auto;
+}
+
+/* 軸ラベル */
+.grid-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #666;
+    border: 1px solid #eee;
+    background-color: #f8f8f8;
+    font-size: 0.75em;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 2px;
+}
+.grid-label.grid-column-header {
+    white-space: normal;
+    line-height: 1.3;
+    padding: 5px;
+    height: auto;
+    align-items: center;
+    background-color: #e9e9e9;
+    font-size: 0.8em;
+    border-bottom: 2px solid #ccc;
+}
+.grid-label.semester-num-label {
+    background-color: #e2e2e2;
+    font-size: 0.9em;
+    color: #333;
+    border-right: 1px solid #bbb;
+    border-bottom: 1px solid #eee;
+    padding: 5px;
+    white-space: pre-wrap;
+    line-height: 1.2;
+}
+.grid-label.quarter-label {
+    background-color: #f8f8f8;
+    font-size: 0.85em;
+    color: #666;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+.map-container {
+    overflow-x: auto;
+}
+
+.grid-row-header {
+    background-color: #f2f2f2; /* 背景色 */
+    font-weight: bold;         /* 太字 */
+    position: sticky;          /* スクロール追従 */
+    left: 0;                   /* 左端固定 */
+    z-index: 10;               /* 前面表示 */
+    
+    /* 中央揃え */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quarter-label {
+    background-color: #fafafa; /* 背景色 */
+    font-size: 0.8em;          /* 文字サイズ */
+    border-left: 1px solid #eee; /* 左境界線 */
+}
+
+/* 列の背景色 */
+.column-bg {
+    z-index: 1; /* 背面に配置 */
+    grid-row: 2 / 11; /* データ行全体に広げる */
+}
+
+/* ゼミ列の背景色 */
+.column-bg-zero {
+    background-color: #A6DEF0;
+}
+.major-bg-is {
+    background-color: #A6DEF0;
+}
+
+.major-bg-nc {
+    background-color: #669AD1
+}
+
+.major-bg-xd {
+    background-color: #9B94C6
+}
+.column-bg-first {
+    background-color: #FEFCD6;
+}
+.column-bg-second {
+    background-color: #CDE7D5;
+}
+.column-bg-third {
+    background-color: #FAD6E4;
+}
+
+
+/* 科目ブロック */
+.subject-block {
+    background-color: #ffffff;
+    position: relative;
+    z-index: 5;
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3px;
+    text-align: center;
+    font-size: clamp(0.6em, 1.3vw, 0.8em);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 30px;
+}
+
+.subject-block:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+.subject-block a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+.subject-block a:hover {
+    color: #0056b3;
+}
+.subject-block .block-code {
+    font-size: 0.8em; /* 親要素基準のサイズ */
+    color: #666;
+    margin-top: 3px;
+}
+
+.type-メジャー共有科目 { 
+    background-color: #7DD3F7;
+    border-color: #7DD3F7;
+}
+
+.tag4-必修 {
+    border: 3px solid #000000;
+}
+
+/* IS必修 */
+.tag4-IS必修 {
+    border: 3px solid #000000;
+}
+
+/* IS選択必修 */
+.tag4-IS選択必修 {
+    border: 2px dashed #000000;
+}
+
+/* NC必修 */
+.tag4-NC必修 {
+    border: 3px solid #000000;
+}
+
+.tag4-XD必修 {
+    border: 2px dashed #000000;
+}
+
+.tag4-XD選択必修 {
+    border: 2px dashed #000000;
+}
+
+.horizontal-dotted-line {
+    border-bottom: 1px dotted #aaaaaa; /* 1px グレー点線 */
+    align-self: start; /* セルの上端に配置 */
+    z-index: 2; /* 背景より手前、ブロックより背面 */
+    pointer-events: none; /* クリックを無効化 */
+}
+
+/* メッセージ表示 */
+.loading-message, .error-message {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+    color: #6c757d;
+}
+.error-message {
+    color: #dc3545;
+}
+.back-to-search {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+.back-to-search:hover {
+    text-decoration: underline;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.fusen-2 {
+    display: inline-block;
+    position: relative;
+    padding: .5em 1em;
+    color: #333333;
+    background-color: #f5f5f5;
+    margin-left: 27px; 
+}
+.fusen-2::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 100%;
+    width: 27px;
+    height: 100%;
+    background-color: #ffd700;
+    box-sizing: border-box; 
+}
+.fusen-2::before {
+    position: absolute;
+    bottom: 2px;
+    left: -20px;
+    z-index: -1;
+    transform: rotate(-5deg);
+    width: 100%;
+    height: 50%;
+    background-color: rgba(0, 0, 0, 0.2); 
+    content: "";
+    filter: blur(4px);
+}
+.home-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.date {
+    font-size: 1.1em;
+    color: #555;
+}
+
+.menu-button {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+.menu-button img {
+    width: 100%;
+    height: auto;
+}
+
+/* スライドメニュー */
+.slide-menu {
+    position: fixed;
+    top: 0;
+    right: -350px; /* 初期状態は画面外 */
+    width: 350px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out; /* スライドアニメーション */
+    z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* .open クラス適用時のスタイル */
+.slide-menu.open {
+    right: 0; /* 画面内にスライドイン */
+}
+
+.slide-menu ul {
+    list-style: none;
+    padding: 40px 0 0 0;
+    margin: 0;
+}
+
+.slide-menu li {
+    margin-bottom: 10px;
+}
+
+.slide-menu a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1.1em;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.slide-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* 背景オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* .active クラス適用時のスタイル */
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* スマートフォン表示調整 */
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 10px;
+    }
+    .home-text {
+        font-size: 1em;
+    }
+    .date {
+        font-size: 1em;
+        padding-right: 5px; 
+    }
+    .menu-button {
+        width: 64px;
+        height: 64px;
+        padding: 17px;
+    }
+    .search-container {
+        width: 95%;
+        padding: 20px 15px;
+    }
+    .search-results-list {
+        width: 95%;
+    }
+}

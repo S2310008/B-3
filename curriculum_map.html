@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情報学領域 カリキュラム系統図</title>
+        <link rel="stylesheet" href="curriculum_map.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="slide-menu" id="slide-menu">
+        <button class="close-button" id="close-button">&times;</button>
+        <ul>
+            <li><a href="home.html">ホーム</a></li>
+            <li><a href="tanikeisan.html">単位取得内訳</a></li>
+            <li><a href="index.html">科目検索（曜日・科目名から）</a></li>
+            <li><a href="curriculum_map.html">科目検索（カリキュラムから）</a></li>
+            <li><a href="tanisimulation.html">予定とシミュレーション</a></li>
+        </ul>
+    </nav>
+    <div class="overlay" id="overlay"></div>
+    <div class="header">
+        <div class="fusen-2">
+            <span class="home-text">情報領域カリキュラム</span>
+        </div>
+
+        <div class="header-right">
+            <div class="date" id="current-date"></div>
+            <button class="menu-button" aria-label="メニューを開く">
+                <img src="image/ハンバーガーメニュー.svg" alt="メニューアイコン">
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="major-selector">
+            <label for="select-map-major">表示メジャーを選択:</label>
+            <select id="select-map-major">
+                <option value="IS">ISメジャー</option>
+                <option value="NC">NCメジャー</option>
+                <option value="XD">XDメジャー</option>
+            </select>
+        </div>
+
+        <div class="map-container">
+            <div class="curriculum-map-grid" id="curriculum-map-grid">
+                </div>
+        </div>
+
+        <div class="legend-container">
+            <div class="legend-item tag4-必修"> <span class="legend-box"></span>
+            <span class="legend-label">必修科目</span>
+            </div>
+            <div class="legend-item tag4-IS選択必修"> <span class="legend-box"></span> <span class="legend-label">選択必修科目</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-box"></span>
+                <span class="legend-label">選択科目</span>
+            </div>
+            <div class="legend-item type-メジャー共有科目"> 
+                <span class="legend-label">メジャー共有科目</span>
+            </div>
+        </div>
+
+        <div class="loading-message" id="loading">カリキュラムデータを読み込み中...</div>
+        <div class="error-message" id="error" style="display: none;"></div>
+        
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU",
+            authDomain: "b3app-b0c29.firebaseapp.com",
+            databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com",
+            projectId: "b3app-b0c29",
+            storageBucket: "b3app-b0c29.firebasestorage.app",
+            messagingSenderId: "1000910332829",
+            appId: "1:1000910332829:web:a1bc233e638afed9b90574"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const mapGridElement = document.getElementById('curriculum-map-grid');
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+        const selectMapMajorElement = document.getElementById('select-map-major'); // メジャー選択要素
+
+        let allSubjectsData = {}; // 科目基本情報
+        let allMetaData = {};     // 科目タグ情報
+        let allMapPositionsData = {}; // 科目位置情報
+
+        // 科目タイプに応じたCSSクラスを返す関数
+        function getSubjectTypeClass(type) {
+            switch(type) {
+                case '必修科目': return 'type-必修科目';
+                case '選択必修科目': return 'type-選択必修科目';
+                case '選択科目': return 'type-選択科目';
+                case '共有':
+                case 'メジャー共有科目': return 'type-メジャー共有科目';
+                case 'ゼミなど': return 'type-ゼミなど';
+                default: return '';
+            }
+        }
+
+        // カリキュラムマップを描画する関数
+        async function renderCurriculumMap(selectedMajor = 'IS') { // 初期値はISメジャー
+            loadingElement.style.display = 'block';
+            errorElement.style.display = 'none';
+
+            try {
+                // Firebaseからデータを並行読み込み
+                const [syllabusSnapshot, metaSnapshot, mapPositionsSnapshot] = await Promise.all([
+                    get(ref(database, 'syllabus_subjects')),
+                    get(ref(database, 'curriculum_meta')),
+                    get(ref(database, 'curriculum_map_positions'))
+                ]);
+                
+                allSubjectsData = syllabusSnapshot.val() || {};
+                allMetaData = metaSnapshot.val() || {};         
+                allMapPositionsData = mapPositionsSnapshot.val() || {};
+
+                loadingElement.style.display = 'none';
+                mapGridElement.innerHTML = ''; // グリッドをクリア
+
+                const totalDataRows = 8;
+                // グリッドの行数を設定
+                mapGridElement.style.gridTemplateRows = `auto repeat(${totalDataRows}, minmax(40px, auto))`;
+
+                // 縦軸ラベル（セメスタ）を生成
+                for (let i = 0; i < 4; i++) {
+                    const rowLabelCell = document.createElement('div');
+                    rowLabelCell.className = 'grid-label grid-row-header';
+                    rowLabelCell.textContent = 6 - i;
+                    
+                    // 2行にまたがるように設定
+                    const startRow = (i * 2) + 2;
+                    const endRow = startRow + 2;
+                    rowLabelCell.style.gridRow = `${startRow} / ${endRow}`;
+                    rowLabelCell.style.gridColumn = 1; // 1列目に配置
+                    mapGridElement.appendChild(rowLabelCell);
+                }
+
+                // 縦軸ラベル（クォーター）を生成
+                const quarters = ['4Q', '3Q', '2Q', '1Q'];
+                for (let i = 0; i < totalDataRows; i++) {
+                    const quarterLabelCell = document.createElement('div');
+                    quarterLabelCell.className = 'grid-label grid-row-header quarter-label';
+                    quarterLabelCell.textContent = quarters[i % 4]; // 4Q, 3Q, 2Q, 1Qを繰り返す
+                    
+                    // 1行ずつ設定
+                    quarterLabelCell.style.gridRow = i + 2;
+                    quarterLabelCell.style.gridColumn = 2; // 2列目に配置
+                    mapGridElement.appendChild(quarterLabelCell);
+                }
+
+                // ヘッダー「セメスタ」
+                const semesterHeader = document.createElement('div');
+                semesterHeader.className = 'grid-label grid-column-header';
+                semesterHeader.textContent = 'セメスタ';
+                semesterHeader.style.gridRow = 1;
+                semesterHeader.style.gridColumn = 1;
+                mapGridElement.appendChild(semesterHeader);
+
+                // ヘッダー「クォーター」
+                const quarterHeader = document.createElement('div');
+                quarterHeader.className = 'grid-label grid-column-header';
+                // quarterHeader.textContent = 'クォーター';
+                quarterHeader.style.gridRow = 1;
+                quarterHeader.style.gridColumn = 2;
+                mapGridElement.appendChild(quarterHeader);
+ 
+                const zeroHeader = document.createElement('div');
+                zeroHeader.className = 'grid-label grid-column-header';
+                zeroHeader.textContent = 'メジャー科目';
+                zeroHeader.style.gridRow = 1;
+                zeroHeader.style.gridColumn = '3 / 7';
+                mapGridElement.appendChild(zeroHeader);
+
+                const firstHeader = document.createElement('div');
+                firstHeader.className = 'grid-label grid-column-header';
+                firstHeader.textContent = 'データサイエンス・人工知能・機械学習';
+                firstHeader.style.gridRow = 1;
+                firstHeader.style.gridColumn = '7 / 9';
+                mapGridElement.appendChild(firstHeader);
+
+                const secondHeader = document.createElement('div');
+                secondHeader.className = 'grid-label grid-column-header';
+                secondHeader.textContent = 'その他共通科目';
+                secondHeader.style.gridRow = 1;
+                secondHeader.style.gridColumn = '9 / 14';
+                mapGridElement.appendChild(secondHeader);
+
+                const thirdHeader = document.createElement('div');
+                thirdHeader.className = 'grid-label grid-column-header';
+                thirdHeader.textContent = 'ゼミなど';
+                thirdHeader.style.gridRow = 1;
+                thirdHeader.style.gridColumn = '14 / 15';
+                mapGridElement.appendChild(thirdHeader);
+
+                // 列の背景色
+                const zeroColumnBg = document.createElement('div');
+                zeroColumnBg.className = `column-bg major-bg-${selectedMajor.toLowerCase()}`;
+                zeroColumnBg.style.gridColumn = '3 / 7';
+                zeroColumnBg.style.gridRow = '2 / 11';
+                mapGridElement.appendChild(zeroColumnBg);
+
+                const firstColumnBg = document.createElement('div');
+                firstColumnBg.className = 'column-bg column-bg-first';
+                firstColumnBg.style.gridColumn = '7 / 9';
+                firstColumnBg.style.gridRow = '2 / 11';
+                mapGridElement.appendChild(firstColumnBg);
+
+                const secondColumnBg = document.createElement('div');
+                secondColumnBg.className = 'column-bg column-bg-second';
+                secondColumnBg.style.gridColumn = '9 / 14';
+                secondColumnBg.style.gridRow = '2 / 11';
+                mapGridElement.appendChild(secondColumnBg);
+
+                const thirdColumnBg = document.createElement('div');
+                thirdColumnBg.className = 'column-bg column-bg-third';
+                thirdColumnBg.style.gridColumn = '14 / 15';
+                thirdColumnBg.style.gridRow = '2 / 11';
+                mapGridElement.appendChild(thirdColumnBg);
+
+                // 水平の点線を追加
+                const linePositions = [3, 4, 5, 6, 7, 8, 9, 10];
+                linePositions.forEach(row => {
+                    const horizontalLine = document.createElement('div');
+                    horizontalLine.className = 'horizontal-dotted-line';
+
+                    // 線の位置を指定
+                    horizontalLine.style.gridRow = row;
+                    horizontalLine.style.gridColumn = '3 / 15';
+
+                    mapGridElement.appendChild(horizontalLine);
+                });
+                
+                // 科目ブロックを配置
+                for (const subjectCode in allSubjectsData) {
+                    const subject = allSubjectsData[subjectCode];
+                    const meta = allMetaData[subjectCode] || {};
+                    const mapPos = allMapPositionsData[subjectCode] || {};
+
+                    let effectiveGridRowStartId = null;
+                    let effectiveGridColStart = null;
+                    let effectiveGridRowEndId = null;
+                    let effectiveGridColEnd = null;
+                    
+                    // 選択されたメジャーの位置情報を取得
+                    if (selectedMajor === 'IS' && mapPos['IS_row'] !== undefined && mapPos['IS_row'] !== null && mapPos['IS_row'] !== '') {
+                        effectiveGridRowStartId = mapPos['IS_row'];
+                        effectiveGridColStart = mapPos['IS_col'];
+                        effectiveGridRowEndId = mapPos['IS_row_end'];
+                        effectiveGridColEnd = mapPos['IS_col_end'];
+                    } else if (selectedMajor === 'NC' && mapPos['NC_row'] !== undefined && mapPos['NC_row'] !== null && mapPos['NC_row'] !== '') {
+                        effectiveGridRowStartId = mapPos['NC_row'];
+                        effectiveGridColStart = mapPos['NC_col'];
+                        effectiveGridRowEndId = mapPos['NC_row_end'];
+                        effectiveGridColEnd = mapPos['NC_col_end'];
+                    } else if (selectedMajor === 'XD' && mapPos['XD_row'] !== undefined && mapPos['XD_row'] !== null && mapPos['XD_row'] !== '') {
+                        effectiveGridRowStartId = mapPos['XD_row'];
+                        effectiveGridColStart = mapPos['XD_col'];
+                        effectiveGridRowEndId = mapPos['XD_row_end'];
+                        effectiveGridColEnd = mapPos['XD_col_end'];
+                    } else if (selectedMajor === 'ALL') {
+                        // ALL選択時は、いずれかのメジャーの位置情報があれば表示
+                        if (mapPos['IS_row'] !== undefined && mapPos['IS_row'] !== null && mapPos['IS_row'] !== '') {
+                            effectiveGridRowStartId = mapPos['IS_row'];
+                            effectiveGridColStart = mapPos['IS_col'];
+                            effectiveGridRowEndId = mapPos['IS_row_end'];
+                            effectiveGridColEnd = mapPos['IS_col_end'];
+                        } else if (mapPos['NC_row'] !== undefined && mapPos['NC_row'] !== null && mapPos['NC_row'] !== '') {
+                            effectiveGridRowStartId = mapPos['NC_row'];
+                            effectiveGridColStart = mapPos['NC_col'];
+                            effectiveGridRowEndId = mapPos['NC_row_end'];
+                            effectiveGridColEnd = mapPos['NC_col_end'];
+                        } else if (mapPos['XD_row'] !== undefined && mapPos['XD_row'] !== null && mapPos['XD_row'] !== '') {
+                            effectiveGridRowStartId = mapPos['XD_row'];
+                            effectiveGridColStart = mapPos['XD_col'];
+                            effectiveGridRowEndId = mapPos['XD_row_end'];
+                            effectiveGridColEnd = mapPos['XD_col_end'];
+                        } else {
+                            // どのメジャーにも特化しない科目の位置
+                            effectiveGridRowStartId = mapPos['grid_row_start'];
+                            effectiveGridColStart = mapPos['grid_column_start'];
+                            effectiveGridRowEndId = mapPos['grid_row_end'];
+                            effectiveGridColEnd = mapPos['grid_column_end'];
+                        }
+                    } else {
+                        // 表示をスキップ
+                        console.log(`情報: 科目 ${subjectCode} は選択されたメジャー (${selectedMajor}) のカリキュラム図上での位置情報がないため表示をスキップしました。`);
+                        continue;
+                    }
+                    
+                    const subjectDetailedType = mapPos['科目詳細'] || '';
+
+                    // 位置情報がある科目のみ描画
+                    if (effectiveGridRowStartId && effectiveGridColStart) { 
+                        // CSSグリッドの行を調整（ヘッダー分+1）
+                        const cssGridRowStart = parseInt(effectiveGridRowStartId) + 1; 
+
+                        // 終了行を計算
+                        const cssGridRowEnd = effectiveGridRowEndId ? 
+                                                parseInt(effectiveGridRowEndId) + 1 : 
+                                                cssGridRowStart + 1;
+
+                        // CSSグリッドの列を調整（ラベル列分+2）
+                        const cssGridColStart = parseInt(effectiveGridColStart) + 2;
+                        const cssGridColEnd = effectiveGridColEnd ? 
+                            parseInt(effectiveGridColEnd) + 2 :
+                            cssGridColStart + 1;
+
+                        const subjectBlock = document.createElement('div');
+                        subjectBlock.className = 'subject-block';
+
+                        const tag4Value = meta.tag4;
+                        if (tag4Value && tag4Value.trim() !== '') {
+                            const shouldApplyStyle =
+                            tag4Value.startsWith(selectedMajor) ||
+                            (!tag4Value.startsWith('IS') && !tag4Value.startsWith('NC') && !tag4Value.startsWith('XD'));
+
+                        if (shouldApplyStyle) {
+                            // タグの値を正規化してクラス名として使用
+                            const normalizedTagValue = tag4Value.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/\s/g, '');
+                            const tag4Class = `tag4-${normalizedTagValue}`;
+                            subjectBlock.classList.add(tag4Class);
+                        }
+                        }
+
+                        // 科目タイプからCSSクラスを追加
+                        const subjectDetailedType = (mapPos['科目詳細'] || '').split('--')[0];
+                        const typeClass = getSubjectTypeClass(subjectDetailedType);
+                        if (typeClass) {
+                            subjectBlock.classList.add(typeClass);
+                        }
+                        
+                        subjectBlock.style.gridRow = `${cssGridRowStart} / ${cssGridRowEnd}`;
+                        subjectBlock.style.gridColumn = `${cssGridColStart} / ${cssGridColEnd}`;
+
+                        let displaySubjectName = '';
+                        const subjectNameParts = (mapPos['科目詳細'] || '').split('--');
+
+                        if (subject && subject['科目名']) {
+                            displaySubjectName = subject['科目名'].split('／')[0].trim();
+                        } 
+                        else {
+                            displaySubjectName = '（名称不明）';
+                        }
+                        subjectBlock.innerHTML = `
+                            <a href="curriculum_detail.html?code=${encodeURIComponent(subjectCode)}" target="_blank">
+                                ${displaySubjectName}
+                            </a>
+                        `;
+                        mapGridElement.appendChild(subjectBlock);
+                    } else {
+                        // 位置情報が不完全な場合はスキップ
+                        // console.log(`情報: 科目 ${subjectCode} は選択されたメジャー (${selectedMajor}) の位置情報が不完全なためスキップ`);
+                    }
+                }
+
+            } catch (error) {
+                console.error("Firebaseからのデータ取得エラー:", error);
+                loadingElement.style.display = 'none';
+                errorElement.style.display = 'block';
+                errorElement.textContent = `カリキュラムデータの読み込みに失敗しました: ${error.message}`;
+            }
+        }
+                // ドロップダウン変更時のイベント
+        selectMapMajorElement.addEventListener('change', (event) => {
+            renderCurriculumMap(event.target.value);
+        });
+
+        // 初期表示
+        renderCurriculumMap('IS'); 
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            dateElement.textContent = `${year}/${month}/${day}`;
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.querySelector('.menu-button');
+            const slideMenu = document.getElementById('slide-menu');
+            const overlay = document.getElementById('overlay');
+            const closeButton = document.getElementById('close-button');
+
+            // メニューを開く
+            menuButton.addEventListener('click', () => {
+                slideMenu.classList.add('open');
+                overlay.classList.add('active');
+            });
+
+            // メニューを閉じる（閉じるボタン）
+            closeButton.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+
+            // メニューを閉じる（オーバーレイ）
+            overlay.addEventListener('click', () => {
+                slideMenu.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
+
+</body>
+</html>

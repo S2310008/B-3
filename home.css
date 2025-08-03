@@ -1,0 +1,138 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 一般的なフォントを指定 */
+    background-color: #f0f0f0; /* 背景色を少し灰色に */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 中央寄せ */
+    min-height: 100vh; /* 画面全体の高さ */
+}
+
+.header {
+    width: 100%; /* 幅を常に100%にする */
+    /* max-width: 600px; を削除またはコメントアウト */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 20px 20px; /* 左右のパディングを均等に */
+    box-sizing: border-box;
+    border-bottom: 1px solid #ccc;
+    /* padding-bottom: 20px; */ /* header内のpadding-bottomは削除し、margin-bottomで調整 */
+    margin-bottom: 20px; /* カードとの間にスペースを確保 */
+    /* 線を左右いっぱいに見せるための調整 */
+    position: relative; /* 必要に応じて追加 */
+    overflow: hidden; /* ボーダーがはみ出さないように */
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* headerのborder-bottomと位置を合わせる */
+    left: 0;
+    right: 0;
+    height: 1px; /* border-bottomと同じ高さ */
+    background-color: #ccc; /* border-bottomと同じ色 */
+    z-index: 0; /* ヘッダーコンテンツの下に */
+}
+
+.fusen-2 {
+    display: inline-block;
+    position: relative;
+    padding: .5em 1em;
+    border-right: 27px solid #ffd700;
+    margin-left: 40px; /* 左端からの距離は維持 */
+    background-color: #f5f5f5;
+    color: #333333;
+}
+
+.fusen-2::before {
+    position: absolute;
+    bottom: 2px;
+    right: -20px;
+    z-index: -1;
+    transform: rotate(5deg);
+    width: 100%;
+    height: 50%;
+    background-color: #d0d0d0;
+    content: "";
+    filter: blur(4px);
+}
+
+.home-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333; /* 文字色 */
+}
+
+.date {
+    font-size: 1.1em;
+    color: #555;
+    padding-right: 40px; /* 右端からの距離は維持 */
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2列のグリッド */
+    gap: 20px; /* カード間のスペース */
+    width: 90%; /* コンテナの幅 */
+    max-width: 600px; /* PCでの表示を考慮して最大幅を設定 */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #ddd; /* 枠線 */
+    border-radius: 10px; /* 角を丸く */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px; /* カードの最小高さ */
+    text-align: center;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 影 */
+    transition: transform 0.2s ease-in-out; /* ホバーエフェクト */
+}
+
+.card:hover {
+    transform: translateY(-5px); /* ホバーで少し浮き上がる */
+}
+
+.card-content {
+    padding: 15px;
+    line-height: 1.5; /* 行の高さ */
+}
+
+/* スマートフォンでの表示調整 */
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 10px;
+    }
+
+    .home-button {
+        padding: 8px 15px;
+    }
+
+    .home-text {
+        font-size: 1em;
+    }
+
+    .date {
+        font-size: 1em;
+        padding-right: 10px;
+    }
+
+    .container {
+        grid-template-columns: 1fr; /* スマートフォンでは1列に */
+        width: 95%;
+        padding: 10px;
+    }
+
+    .card {
+        min-height: 120px;
+        font-size: 1em;
+    }
+}

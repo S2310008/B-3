@@ -1,0 +1,319 @@
+/* --- 基本スタイルとヘッダー --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #ccc;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.fusen-2 {
+    display: inline-block;
+    position: relative;
+    padding: .5em 1em;
+    color: #333333;
+    background-color: #f5f5f5;
+    margin-left: 27px; 
+}
+.fusen-2::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 100%;
+    width: 27px;
+    height: 100%;
+    background-color: #ffd700;
+    box-sizing: border-box; 
+}
+.fusen-2::before {
+    position: absolute;
+    bottom: 2px;
+    left: -20px;
+    z-index: -1;
+    transform: rotate(-5deg);
+    width: 100%;
+    height: 50%;
+    background-color: rgba(0, 0, 0, 0.2); 
+    content: "";
+    filter: blur(4px);
+}
+
+.home-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+.date {
+    font-size: 1.1em;
+    color: #555;
+}
+
+.menu-button {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+.menu-button img {
+    width: 100%;
+    height: auto;
+}
+
+/* 検索コンテナ */
+.search-container {
+    width: 90%;
+    max-width: 800px;
+    padding: 25px 30px;
+    box-sizing: border-box;
+}
+
+/* 検索タブ */
+.search-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-bottom: 20px;
+    /* タブの下の線をなくすため、border-bottom を削除 */
+}
+
+.search-tab-button {
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #6c757d;
+    position: relative;
+    transition: color 0.3s ease;
+}
+.search-tab-button:hover { color: #007bff; }
+.search-tab-button.active {
+    color: #007bff;
+    font-weight: 700;
+}
+.search-tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #007bff;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-in-out;
+}
+.search-tab-button.active::after { transform: scaleX(1); }
+
+/* 検索入力フォーム */
+.search-input-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+}
+.search-input-group input,
+.search-input-group select {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 1em;
+    font-family: 'Noto Sans JP', sans-serif;
+    min-width: 130px;
+}
+#name-search-panel .search-input-group input {
+    flex-grow: 1;
+}
+
+/* --- 検索結果のホバーアクションを追加 --- */
+.search-results-list li {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.search-results-list li:hover {
+    transform: translateY(-4px); /* 少し上に浮き上がる */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* 影を少し濃くする */
+}
+
+/* 検索結果リスト */
+.search-results-list {
+    list-style: none;
+    padding: 0;
+    width: 90%;
+    max-width: 800px;
+    margin: 30px 0;
+}
+.search-results-list li {
+    padding: 20px 25px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 15px;
+}
+.search-results-list li a {
+    text-decoration: none;
+    color: #3d405b;
+    font-weight: 700;
+    font-size: 1.15em;
+}
+.search-results-list li .result-details {
+    font-size: 0.9em;
+    font-weight: 400;
+    color: #6c757d;
+    margin-top: 8px;
+}
+.subject-tag {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 500;
+    display: inline-block;
+    border: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+.tag-special-4 { background-color: #f3e5f5; color: #8e24aa; border-color: #e1bee7; }
+
+/* メッセージ表示 */
+.loading-message, .error-message, .no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 1.1em;
+    color: #6c757d;
+}
+
+/* --- スライドメニューのデザイン --- */
+.slide-menu {
+    position: fixed;
+    top: 0;
+    right: -350px; /* 初期状態では画面の外に隠す */
+    width: 350px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out; /* スライドアニメーション */
+    z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* JavaScriptで .open クラスが付いたときのスタイル */
+.slide-menu.open {
+    right: 0; /* 画面内にスライドイン */
+}
+
+.slide-menu ul {
+    list-style: none;
+    padding: 40px 0 0 0;
+    margin: 0;
+}
+
+.slide-menu li {
+    margin-bottom: 10px;
+}
+
+.slide-menu a {
+    display: block;
+    padding: 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1.1em;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.slide-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* メニュー表示時の背景オーバーレイ */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* JavaScriptで .active クラスが付いたときのスタイル */
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- スマートフォンでの表示調整 --- */
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 10px;
+    }
+    .home-text {
+        font-size: 1em;
+    }
+    .date {
+        font-size: 1em;
+        padding-right: 5px; 
+    }
+    .menu-button {
+        width: 64px;
+        height: 64px;
+        padding: 17px;
+    }
+    .search-container {
+        width: 95%;
+        padding: 20px 15px;
+    }
+    .search-results-list {
+        width: 95%;
+    }
+}

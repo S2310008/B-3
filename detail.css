@@ -156,7 +156,8 @@ body {
     font-weight: 500;
     border-radius: 50px; /* 角を完全に丸く */
     border: 1px solid #dee2e6;
-    background-color: #f8f9fa;
+    background-color: #3498db;
+    color: white;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.2s;
 }

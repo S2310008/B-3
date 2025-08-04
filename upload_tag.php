@@ -8,7 +8,7 @@ use Kreait\Firebase\ServiceAccount;
 
 // --- 設定 ---
 // Firebase サービスアカウントキーへのパス (try.phpと同じパス)
-$serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json'; // ★あなたのJSONファイル名に置き換える！
+$serviceAccountPath = __DIR__ . '/keys/b3app-b0c29-firebase-adminsdk-fbsvc-4d2307d6ce.json';
 
 // Realtime DatabaseのURL (try.phpと同じURL)
 $databaseUrl = 'https://b3app-b0c29-default-rtdb.firebaseio.com/';

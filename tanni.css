@@ -140,6 +140,69 @@ button:hover {
 }
 
 /* ----- 時間割表示用のスタイル ----- */
+/* 開講区分フィルターのスタイル */
+.term-filter {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e9f5ff; /* 淡い青の背景 */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* 要素間のスペース */
+    flex-wrap: wrap; /* 小さい画面での折り返し */
+}
+
+.term-filter label {
+    font-weight: bold;
+    color: #0056b3; /* 濃い青の文字色 */
+    white-space: nowrap; /* ラベルの折り返しを防ぐ */
+}
+
+.term-filter input[type="radio"] {
+    /* ラジオボタン自体のデフォルトスタイルをリセットし、カスタムスタイルを適用 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.15em solid currentColor;
+    border-radius: 50%;
+    transform: translateY(-0.075em);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+
+.term-filter input[type="radio"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.1s ease-in-out;
+    box-shadow: inset 1em 1em var(--form-control-color, #0056b3); /* チェック時の色 */
+    background-color: CanvasText;
+}
+
+.term-filter input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+.term-filter input[type="radio"]:focus {
+    outline: max(2px, 0.15em) solid currentColor;
+    outline-offset: max(2px, 0.15em);
+}
+
+/* ラジオボタンの隣接ラベルのスタイル調整 */
+.term-filter label[for^="termFilter"] {
+    font-weight: normal; /* 個々の選択肢のラベルは太字にしない */
+    color: #333; /* デフォルトの文字色 */
+    cursor: pointer;
+}
 .timetable-tabs {
     display: flex;
     flex-wrap: wrap;

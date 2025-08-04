@@ -108,6 +108,15 @@
         <hr>
         <h2>科目一覧 (時間割)</h2>
         <p>表示したい時間割をクリックしてください。どこの時間割にも含まれていない科目は「その他」を選択してください。</p>
+        <div class="term-filter">
+            <label>開講区分:</label>
+            <input type="radio" id="termFilterAll" name="termFilter" value="all" checked onchange="handleTermFilterChange()">
+            <label for="termFilterAll">全て</label>
+            <input type="radio" id="termFilterFormer" name="termFilter" value="前期／the former term" onchange="handleTermFilterChange()">
+            <label for="termFilterFormer">前期</label>
+            <input type="radio" id="termFilterLatter" name="termFilter" value="後期／the latter term" onchange="handleTermFilterChange()">
+            <label for="termFilterLatter">後期</label>
+        </div>
         <div class="timetable-tabs" id="timetableTabs">
             </div>
 
@@ -254,6 +263,7 @@
         let unitStatusChart;
         let allSubjects = [];
         let currentFilter = '月／Mon　1';
+        let currentTermFilter = 'all'; // 開講区分フィルターを追加
         let checkedSubjectTags = {};
         
         const simulationDataKey = 'tanisimulationData';
@@ -879,13 +889,21 @@
                 filteredSubjects = allSubjects.filter(subject => {
                     const yougen = subject['曜限'];
                     if (!yougen) return true;
-                    
+                     let matchesTerm = false;
+                    const subjectTerm = subject['開講区分'];
+                    if (currentTermFilter === 'all') {
+                        matchesTerm = true;
+                    } else if (currentTermFilter === '前期／the former term') {
+                        matchesTerm = (subjectTerm === '前期／the former term' || subjectTerm === '第1クォーター／1Q' || subjectTerm === '第2クォーター／2Q'|| subjectTerm === '通年／a normal year');
+                    } else if (currentTermFilter === '後期／the latter term') {
+                        matchesTerm = (subjectTerm === '後期／the latter term' || subjectTerm === '第3クォーター／3Q' || subjectTerm === '第4クォーター／4Q'|| subjectTerm === '通年／a normal year');
+                    }
                     if (Array.isArray(yougen)) {
                         const containsOtr = yougen.includes('他／Otr');
                         const containsAnyStandardSlot = yougen.some(y => standardTimeSlots.includes(y));
-                        return containsOtr || (!containsAnyStandardSlot && yougen.length > 0);
+                        return (containsOtr || (!containsAnyStandardSlot && yougen.length > 0)) && matchesTerm;
                     } else if (typeof yougen === 'string') {
-                        return yougen === '他／Otr' || !standardTimeSlots.includes(yougen);
+                        return (yougen === '他／Otr' || !standardTimeSlots.includes(yougen)) && matchesTerm;
                     }
                     return false;
                 });
@@ -893,10 +911,19 @@
             } else {
                 filteredSubjects = allSubjects.filter(subject => {
                     const yougen = subject['曜限'];
+                                        let matchesTerm = false;
+                    const subjectTerm = subject['開講区分'];
+                    if (currentTermFilter === 'all') {
+                        matchesTerm = true;
+                    } else if (currentTermFilter === '前期／the former term') {
+                        matchesTerm = (subjectTerm === '前期／the former term' || subjectTerm === '第1クォーター／1Q' || subjectTerm === '第2クォーター／2Q' || subjectTerm === '通年／a normal year');
+                    } else if (currentTermFilter === '後期／the latter term') {
+                        matchesTerm = (subjectTerm === '後期／the latter term' || subjectTerm === '第3クォーター／3Q' || subjectTerm === '第4クォーター／4Q' || subjectTerm === '通年／a normal year');
+                    }
                     if (Array.isArray(yougen)) {
-                        return yougen.includes(filter);
+                        return yougen.includes(filter) && matchesTerm; // 変更
                     } else if (typeof yougen === 'string') {
-                        return yougen === filter;
+                        return yougen === filter && matchesTerm; // 変更
                     }
                     return false;
                 });
@@ -943,7 +970,14 @@
             });
             updateCalculations();
         }
-
+        function handleTermFilterChange() {
+        // 現在チェックされている開講区分ラジオボタンの値を取得
+                const selectedTermFilter = document.querySelector('input[name="termFilter"]:checked').value;
+        // グローバル変数currentTermFilterを更新
+                currentTermFilter = selectedTermFilter;
+        // 現在の曜限フィルターを維持したまま、科目リストを再表示
+                displaySubjectsByFilter(currentFilter); 
+        }
         function createTimetableTabs() {
             const timetableTabsDiv = document.getElementById('timetableTabs');
             timetableTabsDiv.innerHTML = '';
@@ -982,7 +1016,8 @@
                     major1: major1Selected,
                     major2: major2Selected
                 },
-                currentFilter: currentFilter
+                currentFilter: currentFilter,
+                currentTermFilter: currentTermFilter // Save the new filter
             };
             localStorage.setItem(simulationDataKey, JSON.stringify(dataToSave));
             console.log('シミュレーションデータをローカルストレージに保存しました:', dataToSave);
@@ -1010,6 +1045,13 @@
 
                 checkedSubjectTags = parsedSimData.checkedSubjects || {};
                 currentFilter = parsedSimData.currentFilter || '月／Mon　1';
+                currentTermFilter = parsedSimData.currentTermFilter || 'all'; // Restore the new filter
+
+            // Set the radio button for the restored term filter
+                const termFilterRadio = document.getElementById(`termFilter${currentTermFilter === 'all' ? 'All' : (currentTermFilter === '前期／the former term' ? 'Former' : 'Latter')}`);
+                if (termFilterRadio) {
+                    termFilterRadio.checked = true;
+              }
 
             } else {
                 const calculationData = localStorage.getItem(calculationDataKey);
@@ -1017,6 +1059,11 @@
                     const parsedCalcData = JSON.parse(calculationData);
                     document.getElementById('major1Select').value = parsedCalcData.major1 || 'IS';
                     document.getElementById('major2Select').value = parsedCalcData.major2 || 'IS';
+                     if (parsedCalcData.checkedSubjects) {
+                         checkedSubjectTags = parsedCalcData.checkedSubjects;
+                     }
+                     currentFilter = parsedCalcData.currentFilter || '月／Mon　1'; // 単位計算から曜限フィルターも引き継ぐ
+                     currentTermFilter = parsedCalcData.currentTermFilter || 'all'; // 単位計算から開講区分フィルターも引き継ぐ                
                 }
             }
         }

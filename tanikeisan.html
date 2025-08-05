@@ -100,7 +100,7 @@
 
         <hr>
         <h2>科目一覧 (時間割)</h2>
-        <p>表示したい時間割をクリックしてください。どこの時間割にも含まれていない科目、週に2限以上の科目は「その他」を選択してください。</p>
+        <p>表示したい時間割をクリックしてください。どこの時間割にも含まれていない科目、週に2限以上の科目は「その他」を選択してください。一部の科目は、どのメジャーとして履修するのか選択することができます。</p>
         <div class="term-filter">
             <label>開講区分:</label>
             <input type="radio" id="termFilterAll" name="termFilter" value="all" checked onchange="handleTermFilterChange()">
@@ -378,6 +378,9 @@
             const englishRequiredSubjects = new Set();
             let englishRequiredTotalUnits = 0;
             let johoShoriHisshuUnits = 0;
+            let kogakuKisoHisshuuUnits = 0; 
+　　　　　　 let johoOyoHisshuuUnits = 0; 
+
 
             const generalHisshuSubjects = new Set();
             const isHisshuSubjects = new Set();
@@ -423,7 +426,12 @@
                     if (tagValue === "情報処理必修") {
                          johoShoriHisshuUnits += units;
                     }
-
+                    if (tagValue === "工学基礎必修") { 
+                         kogakuKisoHisshuuUnits += units;
+                    }
+                    if (tagValue === "情報応用必修") { 
+                         johoOyoHisshuuUnits += units;
+                    }
                     if (tag4Value === "必修") {
                         generalHisshuSubjects.add(subject.id);
                     }
@@ -484,7 +492,7 @@
             let isAllRequiredChecked = true;
             let warningMessage = "";
 
-            requiredTags.filter(tag => tag !== "英語必修" && tag !== "情報処理必修").forEach(tag => {
+            requiredTags.filter(tag => tag !== "英語必修" && tag !== "情報処理必修" && tag !== "工学基礎必修" && tag !== "情報応用必修").forEach(tag => {
                 if (!checkedRequiredTags.has(tag)) {
                     isAllRequiredChecked = false;
                     warningMessage += `・${tag}が履修できていません。\n`;
@@ -499,6 +507,14 @@
             if (johoShoriHisshuUnits < 4) {
                  isAllRequiredChecked = false;
                  warningMessage += `・情報処理必修の4単位が取得できていません。\n`;
+            }
+                        if (kogakuKisoHisshuuUnits < 7) {
+   　　　　　　　 isAllRequiredChecked = false;
+    　　　　　　　warningMessage += `・工学基礎必修が履修できていません。\n`;
+　　　　　　 }
+            if (johoOyoHisshuuUnits < 4) {
+                isAllRequiredChecked = false;
+                warningMessage += `・情報応用必修の4単位が履修できていません。\n`;
             }
             const checkedGeneralHisshuSubjects = allSubjects.filter(subject => {
                 return (subject.tag4 === "必修" && ['tag1', 'tag2', 'tag3', 'tag4'].some(tagKey => checkedSubjectTags[`chk-${subject.id}-${tagKey}`]));

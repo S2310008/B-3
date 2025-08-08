@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.
 
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", 
+  apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU", 
   authDomain: "b3app-b0c29.firebaseapp.com", 
   databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com/", 
   projectId: "b3app-b0c29", 

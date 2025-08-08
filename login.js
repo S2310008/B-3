@@ -18,6 +18,7 @@ loginButton.addEventListener('click', () => {
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             console.log("ログイン成功:", userCredential.user);
+            localStorage.setItem('isLoggedIn', 'true');
             alert("ログインに成功しました。");
             window.location.href = 'index.html'; 
         })

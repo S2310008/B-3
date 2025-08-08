@@ -28,6 +28,9 @@
         <a href="tanisimulation.html" class="card">
             <div class="card-content">予定と<br>シミュレーション</div>
         </a>
+        <a href="login.html" class="card" id="login-logout-link">
+        <div class="card-content">ログイン</div>
+        </a>
     </div>
     <script>
         // JavaScriptで今日の日付を取得して表示する
@@ -39,6 +42,36 @@
             const day = today.getDate().toString().padStart(2, '0');
 
             dateElement.textContent = `${year}/${month}/${day}`;
+        });
+        document.addEventListener('DOMContentLoaded', (event) => {
+        // ページ上部に日付を表示する既存のコード
+        const dateElement = document.getElementById('current-date');
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const day = today.getDate().toString().padStart(2, '0');
+        dateElement.textContent = `${year}/${month}/${day}`;
+
+        // ログイン状態をチェックして表示を切り替える新しいコード
+        const loginLogoutLink = document.getElementById('login-logout-link');
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // localStorageからログイン状態を取得
+
+        if (isLoggedIn) {
+            // ログインしている場合
+            loginLogoutLink.href = 'index.html'; // ログアウトページへのリンク
+            loginLogoutLink.querySelector('.card-content').textContent = 'ログアウト';
+            // ログアウトボタンがクリックされた時の処理を追加
+            loginLogoutLink.addEventListener('click', () => {
+                localStorage.setItem('isLoggedIn', 'false'); // ログイン状態をfalseに設定
+                alert('ログアウトしました');
+                // 必要に応じてページをリロードするか、ホームに戻る
+                window.location.href = 'index.html';
+            });
+        } else {
+            // ログインしていない場合
+            loginLogoutLink.href = 'login.html'; // ログインページへのリンク
+            loginLogoutLink.querySelector('.card-content').textContent = 'ログイン';
+        }
         });
     </script>
 </body>

@@ -19,7 +19,7 @@ loginButton.addEventListener('click', () => {
         .then((userCredential) => {
             console.log("ログイン成功:", userCredential.user);
             alert("ログインに成功しました。");
-            window.location.href = 'home.html'; 
+            window.location.href = 'index.html'; 
         })
         .catch((error) => {
             console.error("ログイン失敗:", error.message);

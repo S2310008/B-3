@@ -24,7 +24,7 @@ registerButton.addEventListener('click', () => {
         .then((userCredential) => {
             console.log("ユーザー登録成功:", userCredential.user);
             alert("ユーザー登録が完了しました。ホーム画面へ移動します。");
-            window.location.href = 'home.html'; 
+            window.location.href = 'index.html'; 
         })
         .catch((error) => {
             console.error("ユーザー登録失敗:", error.message);

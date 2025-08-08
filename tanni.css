@@ -204,11 +204,14 @@ button:hover {
     cursor: pointer;
 }
 .timetable-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px; /* ボタン間の間隔を少し広げて見やすくします */
     margin-bottom: 15px;
-    justify-content: center;
+    /* justify-content: center; はgridでは不要になります */
+}
+.timetable-tabs button:last-child {
+    grid-column: 6; /* 最後のボタンを6列目に配置 */
 }
 
 .timetable-tabs button {

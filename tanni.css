@@ -204,11 +204,14 @@ button:hover {
     cursor: pointer;
 }
 .timetable-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px; /* ボタン間の間隔を少し広げて見やすくします */
     margin-bottom: 15px;
-    justify-content: center;
+    /* justify-content: center; はgridでは不要になります */
+}
+.timetable-tabs button:last-child {
+    grid-column: 6; /* 最後のボタンを6列目に配置 */
 }
 
 .timetable-tabs button {
@@ -646,4 +649,102 @@ button:hover {
 /* 曜限の「他／Otr」のような形式の場合 */
 .simulation-timetable .schedule-cell.other-slot {
     background-color: #f0f0f0; /* 「その他」の曜限のセルに色を付ける場合 */
+}
+
+@media (max-width: 768px) {
+    /* 主要コンテンツの余白を調整 */
+    .container {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    /* メジャー選択と手動入力のフォームを縦に並べる */
+    /* 隙間を詰めるためにflex-basisを調整 */
+    .input-section > div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px; /* 隙間を小さく */
+    }
+
+    .input-section label {
+        flex: 1 1 100%;
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+
+    /* 手動入力フィールドの幅を調整 */
+    .input-section input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 単位数合計セクションのレイアウトを調整 */
+    .results-section div,
+    .total-summary div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    /* 曜限ボタンのサイズを調整 */
+    .timetable-tabs button {
+        min-width: unset; /* 最小幅を解除 */
+        padding: 5px 8px; /* パディングを小さく */
+        font-size: 12px; /* フォントサイズを小さく */
+        box-sizing: border-box;
+    }
+
+    
+    /* 各要素の幅を調整 */
+    .subject-header .checkbox-cell,
+    .subject-header .subject-name-cell,
+    .subject-header .credit-cell,
+    .subject-header .term-cell,
+    .subject-header .time-cell,
+    .subject-header .major-cell {
+        min-width: 50px;
+    }
+
+    /* 科目リスト全体のレイアウト調整 */
+    .subject-list-container {
+        overflow-x: auto;
+    }
+
+    /* 科目リスト各行のスタイル */
+    .subject-row {
+        display: flex; /* flexboxに戻す */
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 5px; /* 縦のパディングを小さく */
+        border-bottom: 1px solid #eee;
+        font-size: 11px; /* フォントサイズを小さく */
+    }
+
+    /* 各行のセルスタイル */
+    .subject-row > div {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 2px; /* パディングを小さく */
+    }
+   /* 開講区分を含むコンテナに適用するスタイル */
+    .term-filter {
+        display: flex;
+        flex-wrap: nowrap; /* 折り返しを禁止 */
+        align-items: center;
+        gap: 5px; /* 要素間の隙間を調整 */
+        overflow-x: auto; /* 必要に応じて横スクロールを可能にする */
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .term-filter label {
+        white-space: nowrap; /* ラベルのテキストが折り返さないようにする */
+        flex-shrink: 0; /* ラベルが縮小しないようにする */
+    }
+
+    .term-filter input[type="radio"] {
+        flex-shrink: 0; /* ラジオボタンが縮小しないようにする */
+    }
 }

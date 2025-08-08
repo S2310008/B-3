@@ -1,7 +1,7 @@
 // Firebase SDK の設定情報をここに貼り付けます
 // Firebase コンソールでプロジェクト設定から取得できます
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", 
+  apiKey: "AIzaSyAMVDs2C7zKjame91CzT3LJkaz9WszBPHU", 
   authDomain: "b3app-b0c29.firebaseapp.com", 
   databaseURL: "https://b3app-b0c29-default-rtdb.firebaseio.com/", 
   projectId: "b3app-b0c29", 
